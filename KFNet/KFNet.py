@@ -1,9 +1,9 @@
 import tensorflow as tf
-from cnn_wrapper import helper, ScoreNet, CoordFlowNet
+from cnn_wrapper import helper, SCoordNet, OFlowNet
 from util import *
 from tools.util import bilinear_sampler
 
-class SfMNetDataSpec():
+class KFNetDataSpec():
     def __init__(self,
                  batch_size=4,
                  image_size=(480, 640),
@@ -50,10 +50,10 @@ class SfMNetDataSpec():
         self.max_steps = self.stepvalue * 5
 
 
-class SfMNet():
+class KFNet():
     def __init__(self, images, gt_coords,
                  focal_x, focal_y, u, v,
-                 train_scorenet, train_temporal, dropout_rate=0.5, seed=None, reuse=tf.AUTO_REUSE):
+                 train_scoordnet, train_oflownet, dropout_rate=0.5, seed=None, reuse=tf.AUTO_REUSE):
         self.images = images  # A sequence of images - BxHxWx3
         self.gt_coords = gt_coords
 
@@ -63,8 +63,8 @@ class SfMNet():
         self.v = v
 
         self.reuse = reuse
-        self.train_scorenet = train_scorenet
-        self.train_temporal = train_temporal
+        self.train_scoordnet = train_scoordnet
+        self.train_oflownet = train_oflownet
         self.seed = seed
         self.dropout_rate = dropout_rate
 
@@ -75,8 +75,8 @@ class SfMNet():
         self.width = shape[2]
         self.flow_sample_rate = 8
         self.min_uncertainty = 1e-5
-        self.scorenet = self.BuildScoreNet()
-        self.temp_feat_maps = self.BuildTemporalNet()
+        self.scoordnet = self.BuildSCoordNet()
+        self.temp_feat_maps = self.BuildOFlowNet()
 
 
     ####################### I/O #######################
@@ -84,7 +84,7 @@ class SfMNet():
         return self.images
 
     def GetMeasureCoord(self):
-        return self.scorenet.GetOutput()
+        return self.scoordnet.GetOutput()
 
     def GetKFCoord(self):
         """
@@ -170,41 +170,12 @@ class SfMNet():
         inno_variance = tf.tile(inno_variance, [1, 1, 1, 3])
         NIS = tf.div(tf.square(inno_mean), inno_variance)
         return NIS
-
-
     ####################### eof I/O #######################
 
 
     ####################### loss function #######################
     def loss(self):
         return None
-
-    def CoordLoss(self, pred_coord_map, gt_coords, mask=None, dist_threshold=0.02):
-        """
-        :param gt_coords:
-        :param mask:
-        :param transform: 4x4 Transform applied to predicetd coordinates
-        :return:
-        """
-        shape = pred_coord_map.get_shape().as_list()
-        batch_size = shape[0]
-        height = shape[1]
-        width = shape[2]
-
-        diff_coord_map = tf.reduce_sum(tf.square(pred_coord_map - gt_coords), axis=-1, keepdims=True)
-        if mask is not None:
-            valid_pixel = tf.reduce_sum(mask) + 1.
-            diff_coord_map = mask * diff_coord_map
-        else:
-            valid_pixel = batch_size * height * width
-
-        loss = tf.reduce_sum(diff_coord_map) / valid_pixel
-        thres_coord_map = tf.maximum(diff_coord_map - dist_threshold * dist_threshold, 0)
-        with tf.device('/device:CPU:0'):
-            num_accurate = valid_pixel - tf.cast(tf.count_nonzero(thres_coord_map), tf.float32)
-        accuracy = num_accurate / valid_pixel
-
-        return loss, accuracy
 
     def CoordLossWithUncertainty(self, pred_coord_map, uncertainty_map, gt_coord_map, mask=None, dist_threshold=0.05):
         """
@@ -305,13 +276,12 @@ class SfMNet():
             loss = loss + 50 * smooth_loss
 
         return loss, accuracy
-
     ####################### eof loss function #######################
 
-    def BuildScoreNet(self):
+    def BuildSCoordNet(self):
         with tf.variable_scope('ScoreNet'):
-            return ScoreNet({'input': self.images},
-                            is_training=self.train_scorenet,
+            return SCoordNet({'input': self.images},
+                            is_training=self.train_scoordnet,
                             focal_x=self.focal_x,
                             focal_y=self.focal_y,
                             u=self.u,
@@ -320,30 +290,30 @@ class SfMNet():
                             seed=self.seed,
                             reuse=self.reuse)
 
-    def BuildTemporalNet(self):
+    def BuildOFlowNet(self):
         with tf.variable_scope('Temporal'):
             images = tf.multiply(tf.subtract(self.images, 128.0), 0.00625)
             feat_maps = tf.layers.conv2d(images, filters=16, kernel_size=3, strides=1, activation=tf.nn.relu,
                                          padding='SAME',
-                                         trainable=self.train_temporal, reuse=self.reuse, name='feat1')  # 640x480
+                                         trainable=self.train_oflownet, reuse=self.reuse, name='feat1')  # 640x480
             feat_maps = tf.layers.conv2d(feat_maps, filters=32, kernel_size=3, strides=2, activation=tf.nn.relu,
                                          padding='SAME',
-                                         trainable=self.train_temporal, reuse=self.reuse, name='feat2')  # 320x240
+                                         trainable=self.train_oflownet, reuse=self.reuse, name='feat2')  # 320x240
             feat_maps = tf.layers.conv2d(feat_maps, filters=32, kernel_size=3, strides=1, activation=tf.nn.relu,
                                          padding='SAME',
-                                         trainable=self.train_temporal, reuse=self.reuse, name='feat3')  # 320x240
+                                         trainable=self.train_oflownet, reuse=self.reuse, name='feat3')  # 320x240
             feat_maps = tf.layers.conv2d(feat_maps, filters=64, kernel_size=3, strides=2, activation=tf.nn.relu,
                                          padding='SAME',
-                                         trainable=self.train_temporal, reuse=self.reuse, name='feat4')  # 160x120
+                                         trainable=self.train_oflownet, reuse=self.reuse, name='feat4')  # 160x120
             feat_maps = tf.layers.conv2d(feat_maps, filters=64, kernel_size=3, strides=1, activation=tf.nn.relu,
                                          padding='SAME',
-                                         trainable=self.train_temporal, reuse=self.reuse, name='feat5')  # 160x120
+                                         trainable=self.train_oflownet, reuse=self.reuse, name='feat5')  # 160x120
             feat_maps = tf.layers.conv2d(feat_maps, filters=128, kernel_size=3, strides=2, activation=tf.nn.relu,
                                          padding='SAME',
-                                         trainable=self.train_temporal, reuse=self.reuse, name='feat6')  # 80x60
+                                         trainable=self.train_oflownet, reuse=self.reuse, name='feat6')  # 80x60
             feat_maps = tf.layers.conv2d(feat_maps, filters=32, kernel_size=3, strides=1, activation=None,
                                          padding='SAME',
-                                         trainable=self.train_temporal, reuse=self.reuse, name='feat7')  # 80x60
+                                         trainable=self.train_oflownet, reuse=self.reuse, name='feat7')  # 80x60
 
             feat_maps = tf.nn.l2_normalize(feat_maps, axis=-1)
         return feat_maps
@@ -366,7 +336,7 @@ class SfMNet():
         shift_offsets = tf.cast(tf.concat(shift_offsets, axis=0), tf.float32)  # 100x2
         return diff_feats, shift_offsets
 
-    def BuildCoordFlowNet(self, feat_map1, feat_map2, coord_map1, uncertainty1):
+    def BuildOFlowNet(self, feat_map1, feat_map2, coord_map1, uncertainty1):
         """
         infer temporal coord map2 from coord_map1
         :return: HxWx3, HxWx1
@@ -380,9 +350,9 @@ class SfMNet():
         diff_feats = tf.reshape(diff_feats, shape=[-1, window_size, window_size, channel])
 
         with tf.variable_scope('Temporal'):
-            coord_flow_net = CoordFlowNet({'input': diff_feats},
+            coord_flow_net = OFlowNet({'input': diff_feats},
                                           window_area,
-                                          is_training=self.train_temporal,
+                                          is_training=self.train_oflownet,
                                           reuse=self.reuse)  # BHWx1x1x100
             prob, transition_uncertainty = coord_flow_net.GetOutput()  # BHWx100, BHWx1
 
@@ -409,65 +379,6 @@ class SfMNet():
         temp_uncertainty = tf.sqrt(temp_variance, name='temp_uncertainty')
 
         return temp_coord, temp_uncertainty
-
-    def PixelWarp(self):
-        """
-        Increment pixel coordinates by optical flow
-        :return:
-        """
-        pixel_maps = tf.tile(tf.expand_dims(self.pixel_maps, axis=0), [self.image_num, 1, 1, 1, 1], name='tiled_pixel_map')   # BxBxHxWx2
-        flows = self.GetOpticalFlow()
-        pixel_maps = tf.add(pixel_maps, flows, name='pixel_warp')
-        return pixel_maps
-
-    def HomoCoord(self, coords):
-        shape = coords.get_shape().as_list()
-        shape[-1] = 1
-        ones = tf.ones(shape)
-        coords = tf.concat([coords, ones], axis=-1)
-        return coords
-
-    def World2Pixel(self, batch_coord, pose):
-        """
-        :param batch_coord: Coordinates in world frame - BxHxWx3
-        :param pose: Camera poses - Bx4x4
-        :param spec:
-        :return: In each camera pose, the projected pixel coordinates - BxBxHxWx2
-        """
-        # tile pose
-        pose = tf.tile(pose, [self.image_num, 1, 1], name='tile_poses')    # BBx4x4 [0 1 2 3 0 1 2 3 ...]
-
-        # tile coord
-        batch_coord = self.HomoCoord(batch_coord)   # BxHxWx4
-        batch_coord = tf.reshape(batch_coord, [self.image_num, -1, 4], name='reshape_homo_coord')  # BxHWx4
-        batch_coord = tf.transpose(batch_coord, [0, 2, 1], name='coord_transpose')  # Bx4xHW
-        batch_coord = tf.expand_dims(batch_coord, axis=1)   # Bx1x4xHW
-        batch_coord = tf.tile(batch_coord, [1, self.image_num, 1, 1], name='tile_coords')   # BxBx4xHW
-        batch_coord = tf.reshape(batch_coord, [self.image_num*self.image_num, 4, -1], name='tile_coords_reshape')   # BBx4xHW [0 0 0 0 1 1 1 1 ...]
-
-        batch_coord = tf.matmul(pose, batch_coord, name='coord_matmul')  # BBx4xHW
-        # coord1 -> pose1, coord1 -> pose2, coord1 -> pose3
-        # coord2 -> pose1, coord2 -> pose2, coord2 -> pose3
-        batch_coord = tf.reshape(batch_coord, shape=[self.image_num, self.image_num, 4, self.height, self.width], name='coord_matmul_reshape')   # BxBx4xHxW
-        batch_coord = tf.transpose(batch_coord, [0, 1, 3, 4, 2], name='coord_matmul_transpose')    # BxBxHxWx4
-        batch_coord_x = tf.slice(batch_coord, [0, 0, 0, 0, 0], [-1, -1, -1, -1, 1], name='batch_coord_x')  # BxBxHxWx1
-        batch_coord_y = tf.slice(batch_coord, [0, 0, 0, 0, 1], [-1, -1, -1, -1, 1], name='batch_coord_y')
-        batch_coord_z = tf.maximum(tf.slice(batch_coord, [0, 0, 0, 0, 2], [-1, -1, -1, -1, 1], name='batch_coord_z'), 1e-6)
-        batch_pixel_coord_x = tf.div(batch_coord_x, batch_coord_z) * self.focal_x + self.u  # BxBxHxWx1
-        batch_pixel_coord_y = tf.div(batch_coord_y, batch_coord_z) * self.focal_y + self.v
-        batch_pixel_coord = tf.concat([batch_pixel_coord_x, batch_pixel_coord_y], axis=-1, name='batch_pixel_coord')  # BxBxHxWx2
-        return batch_pixel_coord
-
-    def NormalizePixelMap(self, pixel_map):
-        """
-        :param pixel_map: BxHxWx2
-        """
-        pixel_map_x = tf.slice(pixel_map, [0, 0, 0, 0], [-1, -1, -1, 1])
-        pixel_map_y = tf.slice(pixel_map, [0, 0, 0, 1], [-1, -1, -1, 1])
-        pixel_map_x = (pixel_map_x - self.u) / self.focal_x
-        pixel_map_y = (pixel_map_y - self.v) / self.focal_y
-        pixel_map = tf.concat([pixel_map_x, pixel_map_y], axis=-1)
-        return pixel_map
 
     def ReprojectionLoss(self, coord_map, pixel_map, poses, mask=None):
         """
@@ -567,8 +478,6 @@ class SfMNet():
         KF_variance2 = tf.square(1.0 - weight_K) * variance_12 + tf.square(weight_K) * measure_variance2
         KF_uncertainty2 = tf.sqrt(KF_variance2)
         return KF_coord_map2, KF_uncertainty2
-
-
 ############## These functions are used for recursive inference via Kalman filter ##############
 
 

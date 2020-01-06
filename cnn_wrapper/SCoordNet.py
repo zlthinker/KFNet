@@ -1,8 +1,7 @@
 from cnn_wrapper.network import Network, layer
 import tensorflow as tf
 
-# The network follows DispNet. See Table 2 in https://arxiv.org/pdf/1512.02134.pdf
-class ScoreNet(Network):
+class SCoordNet(Network):
     def __init__(self, inputs, is_training, focal_x, focal_y, u, v, dropout_rate=0.5, seed=None, reuse=False):
         Network.__init__(self, inputs, is_training, dropout_rate, seed, reuse)
         self.focal_x = focal_x

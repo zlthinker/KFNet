@@ -1,14 +1,12 @@
-import sys
-sys.path.append('/run/media/larry/fafb882a-0878-4e0a-9ccb-2fb979b7f717/e3dengine/tfmatch')
-import tensorflow as tf
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from tools.io import read_lines
-import numpy as np
-from SfMNet import *
-from tools.common import Notify
+from KFNet import *
 from tools.io import get_snapshot, get_num_trainable_params
-import time, os, argparse
+import time
 from tensorflow.python import debug as tf_debug
 from util import *
+from datetime import datetime
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -25,8 +23,6 @@ tf.app.flags.DEFINE_integer('reset_step', -1, """Reset training step.""")
 # Params for solver.
 tf.app.flags.DEFINE_float('base_lr', 0.0001,
                           """Base learning rate.""")
-# tf.app.flags.DEFINE_float('base_lr', 0.0001,
-#                           """Base learning rate.""")
 tf.app.flags.DEFINE_integer('max_steps', 400000,
                             """Max training iteration.""")
 tf.app.flags.DEFINE_integer('display', 10,
@@ -326,22 +322,22 @@ def run(image_list, label_list, pose_file, spec, is_training=True):
     transform = get_7scene_transform()
     gt_coords = ApplyTransform(gt_coords, transform, inverse=True)
 
-    sfmnet = SfMNet(images, gt_coords, spec.focal_x, spec.focal_y, spec.u, spec.v,
+    kfnet = KFNet(images, gt_coords, spec.focal_x, spec.focal_y, spec.u, spec.v,
                     train_scorenet=is_training, train_temporal=is_training and not FLAGS.fix_flownet,
                     reuse=tf.AUTO_REUSE)
 
     with tf.name_scope('loss'):
-        measure_coord_loss, measure_coord_accuracy = sfmnet.MeasureCoordLoss(gt_coords, masks,
+        measure_coord_loss, measure_coord_accuracy = kfnet.MeasureCoordLoss(gt_coords, masks,
                                                                              images=resize_images)
-        temp_coord_loss, temp_coord_accuracy = sfmnet.TemporalCoordLoss(gt_coords, masks,
+        temp_coord_loss, temp_coord_accuracy = kfnet.TemporalCoordLoss(gt_coords, masks,
                                                                         images=resize_images)
-        KF_coord_loss, KF_coord_accuracy = sfmnet.KFCoordLoss(gt_coords, masks,
+        KF_coord_loss, KF_coord_accuracy = kfnet.KFCoordLoss(gt_coords, masks,
                                                               images=resize_images)
         loss = 0.2 * measure_coord_loss \
                + 0.2 * temp_coord_loss \
                + 0.6 * KF_coord_loss
 
-    return sfmnet, loss, measure_coord_loss, measure_coord_accuracy, temp_coord_loss, temp_coord_accuracy, \
+    return kfnet, loss, measure_coord_loss, measure_coord_accuracy, temp_coord_loss, temp_coord_accuracy, \
            KF_coord_loss, KF_coord_accuracy, group_indexes, gt_coords * masks, masks
 
 def solver(loss):
@@ -402,7 +398,7 @@ def train(image_list, label_list, pose_file, out_dir, \
 
     print image_list
     image_paths = read_lines(image_list)
-    spec = SfMNetDataSpec()
+    spec = KFNetDataSpec()
     spec.scene = FLAGS.scene
     spec.image_num = len(image_paths)
     spec.sequence_length = 500
@@ -471,12 +467,12 @@ def train(image_list, label_list, pose_file, out_dir, \
             # Print info.
             if step % FLAGS.display == 0 or not FLAGS.is_training:
                 epoch = step // spec.image_num
-                format_str = 'epoch %d, step %d/%d, %5d~%5d~%5d~%5d, loss=%.3f, l_measure=%.3f, l_temp=%.3f, l_KF= %.3f, ' \
+                format_str = '[%s] epoch %d, step %d/%d, %5d~%5d~%5d~%5d, loss=%.3f, l_measure=%.3f, l_temp=%.3f, l_KF= %.3f, ' \
                              'a_measure=%.3f, a_temp=%.3f,a_KF=%.3f, #pixels=%d, lr = %.6f (%.3f sec/step)'
-                print(Notify.INFO, format_str % (epoch, step, FLAGS.max_steps,
-                                                 out_group_indexes[0], out_group_indexes[1], out_group_indexes[2], out_group_indexes[3],
-                                                 out_loss, out_measure_loss, out_temp_loss, out_KF_loss, out_measure_accuracy,
-                                                 out_temp_accuracy, out_KF_accuracy, np.sum(out_masks), lr, duration))
+                print(format_str % (datetime.now(), epoch, step, FLAGS.max_steps,
+                                    out_group_indexes[0], out_group_indexes[1], out_group_indexes[2], out_group_indexes[3],
+                                    out_loss, out_measure_loss, out_temp_loss, out_KF_loss, out_measure_accuracy,
+                                    out_temp_accuracy, out_KF_accuracy, np.sum(out_masks), lr, duration))
 
             # Save the model checkpoint periodically.
             if step % FLAGS.snapshot == 0 or step == FLAGS.max_steps:

@@ -1,16 +1,10 @@
-import sys
-sys.path.append('/run/media/larry/fafb882a-0878-4e0a-9ccb-2fb979b7f717/e3dengine/tfmatch')
-import tensorflow as tf
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from tensorflow.python import debug as tf_debug
-from SfMNet import *
+from KFNet import *
 from tools.io import read_lines, get_snapshot
-from train import FLAGS, run, RestoreFromScope, get_pixel_map
-from tools.common import Notify
+from train import FLAGS, run, RestoreFromScope
 import matplotlib.pyplot as plt
-import os
-import cv2
-import seaborn as sns
-from scipy import stats
 
 def dist_error(coords, gt_coords, mask):
     """
@@ -31,7 +25,7 @@ def eval(image_list, label_list, pose_file, snapshot, out_dir):
     print image_list
     image_paths = read_lines(image_list)
 
-    spec = SfMNetDataSpec()
+    spec = KFNetDataSpec()
     spec.scene = FLAGS.scene
     spec.batch_size = 4
     spec.image_num = len(image_paths)
@@ -48,16 +42,16 @@ def eval(image_list, label_list, pose_file, snapshot, out_dir):
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
 
-    sfmnet, loss, measure_loss, measure_accuracy, temp_loss, temp_accuracy, KF_loss, KF_accuracy, \
+    kfnet, loss, measure_loss, measure_accuracy, temp_loss, temp_accuracy, KF_loss, KF_accuracy, \
     group_indexes, gt_coords, masks = run(image_list, label_list, pose_file, spec, False)
 
-    images = sfmnet.GetInputImages()
-    measure_coord_map, measure_uncertainty_map = sfmnet.GetMeasureCoord()
+    images = kfnet.GetInputImages()
+    measure_coord_map, measure_uncertainty_map = kfnet.GetMeasureCoord()
     measure_uncertainty_map = 1.0 / measure_uncertainty_map
-    temp_coord_map, temp_uncertainty_map, KF_coord_map, KF_uncertainty_map = sfmnet.GetKFCoord()
+    temp_coord_map, temp_uncertainty_map, KF_coord_map, KF_uncertainty_map = kfnet.GetKFCoord()
     temp_uncertainty_map = 1.0 / temp_uncertainty_map
     KF_uncertainty_map = 1.0 / KF_uncertainty_map
-    NIS = sfmnet.GetNIS()
+    NIS = kfnet.GetNIS()
 
     if FLAGS.scene == 'chess':
         transform = tf.constant([[0.95969, 0.205793, -0.191428, 0.207924],
@@ -177,21 +171,6 @@ def eval(image_list, label_list, pose_file, snapshot, out_dir):
                                  out_measure_loss, out_temp_loss, out_KF_loss, \
                                  out_measure_accuracy, out_temp_accuracy, out_KF_accuracy, \
                                  median_mea_dist, median_temp_dist, median_KF_dist, percent))
-            # index = out_group_indexes[-1]
-            # save_masks = cv2.resize(out_masks[-1, :, :, :], (640, 480))
-            # save_masks = (save_masks == 1).astype(np.float32)
-            # save_masks = np.stack([save_masks, save_masks, save_masks], axis = -1)
-            # save_gt_coords = cv2.resize(out_gt_coord[-1, :, :, :], (640, 480)) * save_masks
-            # save_measure_coord = cv2.resize(out_measure_coord[-1, :, :, :], (640, 480))
-            # save_KF_coord = cv2.resize(out_KF_coord[-1, :, :, :], (640, 480))
-            #
-            # gt_savepath = os.path.join(FLAGS.output_folder, str(index) + '_gt.png')
-            # measure_savepath = os.path.join(FLAGS.output_folder, str(index) + '_measure.png')
-            # KF_savepath = os.path.join(FLAGS.output_folder, str(index) + '_KF.png')
-            # plt.imsave(gt_savepath, save_gt_coords * 0.5)
-            # # plt.imsave(measure_savepath, save_measure_coord * 0.5)
-            # plt.imsave(KF_savepath, save_KF_coord * 0.5)
-            # continue
 
             if not FLAGS.show:
                 if os.path.isdir(FLAGS.output_folder):

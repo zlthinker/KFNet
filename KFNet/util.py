@@ -1,8 +1,6 @@
 import tensorflow as tf
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-import scipy.stats
 
 def HomoCoord(coords):
     shape = coords.get_shape().as_list()
@@ -63,34 +61,6 @@ def GetPixelMap(batch_size, height, width, normalize=False, spec=None):
     map = tf.expand_dims(map, axis=0)  # 1xHxWx2
     map = tf.tile(map, [batch_size, 1, 1, 1])
     return map
-
-def FlowFromCoordMap(coord_map1, pose2, spec):
-    """
-    :param coord_map1: BxHxWx4 - coordinate map of camera1
-    :param pose2: Bx3x3 - camera pose of camera2, world space to camera space
-    :return: BxHxWx3 - optical flow with mask from camera1 to camera2
-    """
-
-    batch_size, height, width, _ = coord_map1.get_shape().as_list()
-    mask1 = tf.slice(coord_map1, [0, 0, 0, 3], [-1, -1, -1, 1])         # BxHxWx1
-    coord_map1 = tf.slice(coord_map1, [0, 0, 0, 0], [-1, -1, -1, 3])    # BxHxWx3
-    coord_map1 = tf.reshape(coord_map1, [batch_size, -1, 3])            # BxHWx3
-    coord_map1 = tf.transpose(coord_map1, [0, 2, 1])                    # Bx3xHW
-
-    camera_coord_map1 = tf.matmul(pose2, coord_map1)                    # Bx3xHW
-    camera_coord_map1 = tf.transpose(camera_coord_map1, [0, 2, 1])      # BxHWx3
-    camera_coord_map1 = tf.reshape(camera_coord_map1, [batch_size, height, width, 3])   # BxHxWx3
-    camera_coord_map1_x = tf.slice(camera_coord_map1, [0, 0, 0, 0], [-1, -1, -1, 1])    # BxHxWx1
-    camera_coord_map1_y = tf.slice(camera_coord_map1, [0, 0, 0, 1], [-1, -1, -1, 1])
-    camera_coord_map1_z = tf.slice(camera_coord_map1, [0, 0, 0, 2], [-1, -1, -1, 1])
-    camera_pixel_map2_x = tf.divide(camera_coord_map1_x, camera_coord_map1_z) * spec.focal_x + spec.u   # BxHxWx1
-    camera_pixel_map2_y = tf.divide(camera_coord_map1_y, camera_coord_map1_z) * spec.focal_y + spec.v
-    camera_pixel_map2 = tf.concat([camera_pixel_map2_x, camera_pixel_map2_y], axis=-1)  # BxHxWx2
-
-    camera_pixel_map1 = GetPixelMap(batch_size, height, width, False)   # BxHxWx2
-    optical_flow = camera_pixel_map2 - camera_pixel_map1            # BxHxWx2
-    optical_flow = tf.concat([optical_flow, mask1], axis=-1)        # BxHxWx3
-    return optical_flow
 
 ########################### data augmentation ##############################
 def image_translation_augmentation(image, spec):
@@ -164,90 +134,4 @@ def image_augmentation(image, spec):
     image = tf.case([(rand_var < 0.1, f1), (rand_var < 0.55, f2)], default=f3, exclusive=False)
 
     return image
-
 ############################ eof data augmentation ##############################
-
-############################ visualization ##############################
-def plot_pdf(data_array, save_path=None):
-    # clear zeros
-    data_array = filter(lambda x: x > 0 and x < 20, data_array)
-
-    min_val = min(data_array)
-    max_val = max(data_array)
-    bin_size = 0.01
-    bin_num = int((max_val - min_val) / bin_size)
-
-    fig, ax1 = plt.subplots()
-    vals, bin_edges, patches = ax1.hist(data_array, bin_num, normed=1, facecolor='b', alpha=0.5)
-    bw = 0.1
-    t_range = np.linspace(min_val, max_val, 1000)
-    kde = scipy.stats.gaussian_kde(data_array, bw_method=bw)
-    ax1.plot(t_range, kde(t_range), lw=2, color='b')
-    ax1.set_ylabel('PDF')
-
-    vals /= (bin_size * vals).sum()
-    C_vals = np.cumsum(np.asarray(vals * bin_size))
-    c_range = bin_edges[0:-1]
-    ax2 = ax1.twinx()
-    ax2.plot(c_range, C_vals, color='r')
-    ax2.set_ylabel('CDF')
-
-    # area under curve
-    AUC = np.sum(C_vals) * bin_size / (max_val - min_val)
-    plt.title('AUC='+str(AUC))
-############################ eof visualization ##############################
-
-def RandomRotation():
-    """
-    Generate a random 3x3 rotatio matrix
-    :return: 3x3
-    :return: 3x3
-    """
-    angle_x = tf.squeeze(tf.random_uniform([1], 0, 2 * math.pi, dtype=tf.float32))
-    angle_y = tf.squeeze(tf.random_uniform([1], 0, 2 * math.pi, dtype=tf.float32))
-    angle_z = tf.squeeze(tf.random_uniform([1], 0, 2 * math.pi, dtype=tf.float32))
-
-    rot_x = tf.stack([1, 0, 0, 0, tf.cos(angle_x), -tf.sin(angle_x), 0, tf.sin(angle_x), tf.cos(angle_x)])
-    rot_y = tf.stack([tf.cos(angle_y), 0, tf.sin(angle_y), 0, 1, 0, -tf.sin(angle_y), 0, tf.cos(angle_y)])
-    rot_z = tf.stack([tf.cos(angle_z), -tf.sin(angle_z), 0, tf.sin(angle_z), tf.cos(angle_z), 0, 0, 0, 1])
-    rot_x = tf.reshape(rot_x, [3, 3])
-    rot_y = tf.reshape(rot_y, [3, 3])
-    rot_z = tf.reshape(rot_z, [3, 3])
-
-    rot = tf.matmul(rot_z, rot_y)
-    rot = tf.matmul(rot, rot_x)
-    return rot
-
-def RotateCoord(coord_map, rotation):
-    """
-    :param coord_map: BxHxWx3
-    :param rotation: 3x3
-    :return: BxHxWx3
-    """
-    batch_size, height, width, _ = coord_map.get_shape().as_list()
-
-    coord_map = tf.reshape(coord_map, [batch_size, -1, 3])  # BxHWx3
-
-    rotation = tf.expand_dims(rotation, axis=0) # 1x3x3
-    rotation = tf.tile(rotation, [batch_size, 1, 1])    # Bx3x3
-    coord_map = tf.matmul(coord_map, rotation) # BxHWx3
-    coord_map = tf.reshape(coord_map, [batch_size, height, width, 3])
-    return coord_map
-
-def SubSampleImage(image, sample):
-    """
-    Resize batch of images, get value from the center of grids
-    :param image:
-    :return:
-    """
-    batch_size, height, width, channel = image.get_shape().as_list()
-    w = np.zeros([sample, sample, channel, channel], dtype=np.float32)
-    for i in range(channel):
-        w[sample//2, sample//2, i, i] = 1
-        # w[3, 4, i, i] = 0.25
-        # w[4, 3, i, i] = 0.25
-        # w[4, 4, i, i] = 0.25
-    # kernel = tf.Variable(w, trainable=False)
-
-    resized_image = tf.nn.conv2d(image, w, [1, sample, sample, 1], padding="VALID", name='resize_op')
-    return resized_image

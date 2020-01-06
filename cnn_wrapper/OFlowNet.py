@@ -1,9 +1,9 @@
-from cnn_wrapper.network import Network, layer
+from cnn_wrapper.network import Network
 import tensorflow as tf
 
 # Input BxHxWxN cost volume
 # Outout BxHxWx3 coordinate map & BxHxWx1 uncertainty map
-class CoordFlowNet(Network):
+class OFlowNet(Network):
     def __init__(self, inputs, window_area, is_training, reuse=False):
         images = inputs['input']
         shape = images.get_shape().as_list()
