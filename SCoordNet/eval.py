@@ -3,7 +3,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from model import run_testing, get_indexes, read_lines, FLAGS
 from tools.io import get_snapshot
 from tensorflow.python import debug as tf_debug
-from cnn_wrapper import helper, ScoreNet
+from cnn_wrapper import helper, SCoordNet
 import matplotlib.pyplot as plt
 from util import *
 
@@ -36,7 +36,7 @@ def eval(image_list, label_list, output_folder, snapshot, debug=False):
     image_paths = read_lines(image_list)
     image_num = len(image_paths)
 
-    spec = helper.get_data_spec(model_class=ScoreNet)
+    spec = helper.get_data_spec(model_class=SCoordNet)
     spec.batch_size = 1
     spec.scene = FLAGS.scene
     if FLAGS.scene == 'GreatCourt' or FLAGS.scene == 'KingsCollege' or \
@@ -53,7 +53,7 @@ def eval(image_list, label_list, output_folder, snapshot, debug=False):
 
     indexes = get_indexes(image_num, False)
     print indexes
-    scorenet, images, coords, uncertainty, gt_coords, mask, image_indexes = \
+    scoordnet, images, coords, uncertainty, gt_coords, mask, image_indexes = \
         run_testing(indexes, image_list, label_list, spec)
 
     # configuration

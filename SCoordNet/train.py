@@ -4,7 +4,7 @@ import tensorflow as tf
 from model import run_training, FLAGS
 from tools.io import get_snapshot, get_num_trainable_params
 from tensorflow.python import debug as tf_debug
-from cnn_wrapper import helper, ScoreNet
+from cnn_wrapper import helper, SCoordNet
 from datetime import datetime
 
 def set_stepvalue():
@@ -126,7 +126,7 @@ def train(image_list, label_list, out_dir, \
     if FLAGS.reset_step >=0:
         init_step = FLAGS.reset_step
 
-    spec = helper.get_data_spec(model_class=ScoreNet)
+    spec = helper.get_data_spec(model_class=SCoordNet)
     spec.scene = FLAGS.scene
     set_stepvalue()
 

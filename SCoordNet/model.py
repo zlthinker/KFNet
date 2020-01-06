@@ -1,5 +1,5 @@
 import math
-from cnn_wrapper import helper, ScoreNet
+from cnn_wrapper import helper, SCoordNet
 from loss import *
 from util import *
 
@@ -536,7 +536,7 @@ def get_training_data(image_list, label_list, spec):
 
 def run_training(image_list, label_list, is_training=True):
 
-    spec = helper.get_data_spec(model_class=ScoreNet)
+    spec = helper.get_data_spec(model_class=SCoordNet)
     batch_images, batch_labels, batch_index = \
         get_training_data(image_list, label_list, spec)
     # BxHxWx3, BxHxWx4, BxHxWx2, Bx12
@@ -544,7 +544,7 @@ def run_training(image_list, label_list, is_training=True):
     with tf.device('/device:GPU:%d' % FLAGS.gpu):
 
         with tf.variable_scope("ScoreNet"):
-            scorenet = ScoreNet({'input': batch_images},
+            scoordnet = SCoordNet({'input': batch_images},
                                  is_training=is_training,
                                  reuse=False)# BxHxWx4
 
@@ -558,7 +558,7 @@ def run_training(image_list, label_list, is_training=True):
             mask = tf.cast((mask >= 1.0), tf.float32)
 
             # coordinate loss
-            coord_map, uncertainty_map = scorenet.GetOutput()
+            coord_map, uncertainty_map = scoordnet.GetOutput()
             transform = get_transform()
             gt_coords = ApplyTransform(gt_coords, transform, inverse=True)
             dist_threshold = 0.05
@@ -655,7 +655,7 @@ def run_testing(indexes, image_list, label_list, spec, is_training=False):
     batch_images, batch_labels, indexes = get_testing_data(indexes, image_list, label_list, spec)
 
     with tf.variable_scope("ScoreNet"):
-        scorenet = ScoreNet({'input': batch_images},
+        scorenet = ScoordNet({'input': batch_images},
                              is_training=is_training,
                              reuse=False)# BxHxWx4
 
@@ -667,7 +667,7 @@ def run_testing(indexes, image_list, label_list, spec, is_training=False):
         mask = tf.cast((mask >= 1.0), tf.float32)
 
         # coordinate loss
-        coord_map, uncertainty_map = scorenet.GetOutput()
+        coord_map, uncertainty_map = scoordnet.GetOutput()
         if FLAGS.scene == 'ShopFacade' \
                 or FLAGS.scene == 'OldHospital':
             coord_map *= 10
@@ -695,4 +695,4 @@ def run_testing(indexes, image_list, label_list, spec, is_training=False):
         transform = get_transform()
         coord_map = ApplyTransform(coord_map, transform)
 
-    return scorenet, batch_images, coord_map, uncertainty_map, gt_coords, mask, indexes
+    return scoordnet, batch_images, coord_map, uncertainty_map, gt_coords, mask, indexes

@@ -1,4 +1,4 @@
-from cnn_wrapper.ScoreNet import ScoreNet
+from cnn_wrapper.SCoordNet import SCoordNet
 
 class DataSpec(object):
     """Input data specifications for an ImageNet model."""
@@ -24,7 +24,7 @@ class DataSpec(object):
         # The scalar to be multiplied from each image.
         self.scale = scale
 
-class ScoreNetDataSpec(DataSpec):
+class SCoordNetDataSpec(DataSpec):
     def __init__(self,
                  batch_size,
                  downsample = 8,
@@ -38,7 +38,7 @@ class ScoreNetDataSpec(DataSpec):
                  u=320.,
                  v=240.,
                  scene='fire'):
-        super(ScoreNetDataSpec, self).__init__(batch_size=batch_size,
+        super(SCoordNetDataSpec, self).__init__(batch_size=batch_size,
                                                input_size=(0, 0),
                                                mean=mean,
                                                scale=scale,
@@ -55,12 +55,12 @@ class ScoreNetDataSpec(DataSpec):
 # Collection of sample auto-generated models
 # MODELS = (MatchNet)
 MODELS = (
-    ScoreNet
+    SCoordNet
 )
 # The corresponding data specifications for the sample models
 # These specifications are based on how the models were trained.
 MODEL_DATA_SPECS = {
-    ScoreNet: ScoreNetDataSpec(batch_size=4)
+    SCoordNet: SCoordNetDataSpec(batch_size=4)
 }
 
 

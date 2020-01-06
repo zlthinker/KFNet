@@ -1,7 +1,7 @@
 from cnn_wrapper.network import Network, layer
 import tensorflow as tf
 
-class ScoreNet(Network):
+class SCoordNet(Network):
     def setup(self):
         (self.feed('input')
          .preprocess(name='preprocess')
