@@ -1,5 +1,5 @@
-import tensorflow as tf
-from cnn_wrapper import helper, SCoordNet, OFlowNet
+from cnn_wrapper.SCoordNet import SCoordNet
+from cnn_wrapper.OFlowNet import OFlowNet
 from util import *
 from tools.util import bilinear_sampler
 
@@ -51,16 +51,12 @@ class KFNetDataSpec():
 
 
 class KFNet():
-    def __init__(self, images, gt_coords,
-                 focal_x, focal_y, u, v,
+    def __init__(self, images, spec,
                  train_scoordnet, train_oflownet, dropout_rate=0.5, seed=None, reuse=tf.AUTO_REUSE):
-        self.images = images  # A sequence of images - BxHxWx3
-        self.gt_coords = gt_coords
-
-        self.focal_x = focal_x
-        self.focal_y = focal_y
-        self.u = u
-        self.v = v
+        self.focal_x = spec.focal_x
+        self.focal_y = spec.focal_y
+        self.u = spec.u
+        self.v = spec.v
 
         self.reuse = reuse
         self.train_scoordnet = train_scoordnet
@@ -68,15 +64,15 @@ class KFNet():
         self.seed = seed
         self.dropout_rate = dropout_rate
 
-        shape = images.get_shape().as_list()
-        self.image_num = shape[0]
-        assert self.image_num == 4
-        self.height = shape[1]
-        self.width = shape[2]
+        self.batch_size = spec.batch_size
+        self.height = spec.image_size[0]
+        self.width = spec.image_size[1]
         self.flow_sample_rate = 8
         self.min_uncertainty = 1e-5
+
+        self.images = images
         self.scoordnet = self.BuildSCoordNet()
-        self.temp_feat_maps = self.BuildOFlowNet()
+        self.temp_feat_maps = self.BuildOFlowFeat()
 
 
     ####################### I/O #######################
@@ -86,49 +82,20 @@ class KFNet():
     def GetMeasureCoord(self):
         return self.scoordnet.GetOutput()
 
-    def GetKFCoord(self):
+    def GetKFCoord(self, last_coord, last_uncertainty):
         """
         Get coordinate map from kalman filter
+        :param last_coord: 1xHxWx3
+        :param last_uncertainty: 1xHxWx1
         :return: HxWx3
         """
-        pred_coord_map, pred_uncertainty_map = self.GetMeasureCoord()
-        measure_coord1 = tf.slice(pred_coord_map, [0, 0, 0, 0], [1, -1, -1, -1])
-        measure_coord2 = tf.slice(pred_coord_map, [1, 0, 0, 0], [1, -1, -1, -1])
-        measure_coord3 = tf.slice(pred_coord_map, [2, 0, 0, 0], [1, -1, -1, -1])
-        measure_coord4 = tf.slice(pred_coord_map, [3, 0, 0, 0], [1, -1, -1, -1])
-        measure_uncertainty1 = tf.slice(pred_uncertainty_map, [0, 0, 0, 0], [1, -1, -1, -1])
-        measure_uncertainty2 = tf.slice(pred_uncertainty_map, [1, 0, 0, 0], [1, -1, -1, -1])
-        measure_uncertainty3 = tf.slice(pred_uncertainty_map, [2, 0, 0, 0], [1, -1, -1, -1])
-        measure_uncertainty4 = tf.slice(pred_uncertainty_map, [3, 0, 0, 0], [1, -1, -1, -1])
+        measure_coord, measure_uncertainty = self.GetMeasureCoord2()
 
         feat_map1 = tf.slice(self.temp_feat_maps, [0, 0, 0, 0], [1, -1, -1, -1])
         feat_map2 = tf.slice(self.temp_feat_maps, [1, 0, 0, 0], [1, -1, -1, -1])
-        feat_map3 = tf.slice(self.temp_feat_maps, [2, 0, 0, 0], [1, -1, -1, -1])
-        feat_map4 = tf.slice(self.temp_feat_maps, [3, 0, 0, 0], [1, -1, -1, -1])
 
-        # frame1
-        KF_coord1 = measure_coord1
-        KF_uncertainty1 = measure_uncertainty1
-        temp_coord1 = measure_coord1
-        temp_uncertainty1 = measure_uncertainty1
-
-        # frame2
-        temp_coord2, temp_uncertainty2 = self.BuildCoordFlowNet(feat_map1, feat_map2, KF_coord1, KF_uncertainty1)
-        KF_coord2, KF_uncertainty2 = self.BuildKFCoord(temp_coord2, temp_uncertainty2, measure_coord2, measure_uncertainty2)
-
-        # frame3
-        temp_coord3, temp_uncertainty3 = self.BuildCoordFlowNet(feat_map2, feat_map3, KF_coord2, KF_uncertainty2)
-        KF_coord3, KF_uncertainty3 = self.BuildKFCoord(temp_coord3, temp_uncertainty3, measure_coord3, measure_uncertainty3)
-
-        # frame4
-        temp_coord4, temp_uncertainty4 = self.BuildCoordFlowNet(feat_map3, feat_map4, KF_coord3, KF_uncertainty3)
-        KF_coord4, KF_uncertainty4 = self.BuildKFCoord(temp_coord4, temp_uncertainty4, measure_coord4, measure_uncertainty4)
-
-        temp_coord = tf.concat([temp_coord1, temp_coord2, temp_coord3, temp_coord4], axis=0)
-        temp_uncertainty = tf.concat([temp_uncertainty1, temp_uncertainty2, temp_uncertainty3, temp_uncertainty4], axis=0)
-
-        KF_coord = tf.concat([KF_coord1, KF_coord2, KF_coord3, KF_coord4], axis=0)
-        KF_uncertainty = tf.concat([KF_uncertainty1, KF_uncertainty2, KF_uncertainty3, KF_uncertainty4], axis=0)
+        temp_coord, temp_uncertainty = self.BuildOFlowNet(feat_map1, feat_map2, last_coord, last_uncertainty)
+        KF_coord, KF_uncertainty = self.BuildKFCoord(temp_coord, temp_uncertainty, measure_coord, measure_uncertainty)
 
         return temp_coord, temp_uncertainty, KF_coord, KF_uncertainty
 
@@ -137,22 +104,19 @@ class KFNet():
         Get coordinate map from kalman filter
         :return: HxWx3
         """
-        last_variance = tf.square(last_uncertainty)
-        measure_variance = tf.square(measure_uncertainty)
-        weight_K = tf.div(last_variance, last_variance + measure_variance)
-        weight_K_3 = tf.tile(weight_K, [1, 1, 1, 3])
-
-        KF_coord = tf.maximum(1.0 - weight_K_3, 0.0) * last_coord + weight_K_3 * measure_coord
-        KF_variance = tf.maximum(1.0 - weight_K, 0.0) * last_variance
-        KF_uncertainty = tf.sqrt(KF_variance)
+        with tf.variable_scope('KF'):
+            last_variance = tf.square(last_uncertainty)
+            measure_variance = tf.square(measure_uncertainty)
+            weight_K = tf.div(last_variance, last_variance + measure_variance)
+            weight_K_3 = tf.tile(weight_K, [1, 1, 1, 3])
+            KF_coord = tf.maximum(1.0 - weight_K_3, 0.0) * last_coord + weight_K_3 * measure_coord
+            KF_variance = tf.maximum(1.0 - weight_K, 0.0) * last_variance
+            KF_uncertainty = tf.sqrt(KF_variance)
 
         return KF_coord, KF_uncertainty
 
-    def GetInnovation(self):
-        measure_coord_map, measure_uncertainty_map = self.GetMeasureCoord()
+    def GetInnovation(self, measure_coord_map, measure_uncertainty_map, temp_coord_map, temp_uncertainty_map):
         measure_variance = tf.square(measure_uncertainty_map)
-
-        temp_coord_map, temp_uncertainty_map, _, _ = self.GetKFCoord()
         temp_variance = tf.square(temp_uncertainty_map)
 
         inno_mean = measure_coord_map - temp_coord_map
@@ -161,15 +125,17 @@ class KFNet():
 
         return inno_mean, inno_uncertainty
 
-    def GetNIS(self):
+    def GetNIS(self, measure_coord_map, measure_uncertainty_map, temp_coord_map, temp_uncertainty_map):
         """
         :return: BxHxWx3
         """
-        inno_mean, inno_uncertainty = self.GetInnovation()
-        inno_variance = tf.square(inno_uncertainty)
-        inno_variance = tf.tile(inno_variance, [1, 1, 1, 3])
-        NIS = tf.div(tf.square(inno_mean), inno_variance)
-        return NIS
+        with tf.variable_scope('NIS'):
+            inno_mean, inno_uncertainty = self.GetInnovation(measure_coord_map, measure_uncertainty_map,
+                                                         temp_coord_map, temp_uncertainty_map)
+            inno_variance = tf.square(inno_uncertainty)
+            inno_variance = tf.tile(inno_variance, [1, 1, 1, 3])
+            NIS = tf.div(tf.square(inno_mean), inno_variance)
+        return NIS  # 1xHxWx3
     ####################### eof I/O #######################
 
 
@@ -177,7 +143,8 @@ class KFNet():
     def loss(self):
         return None
 
-    def CoordLossWithUncertainty(self, pred_coord_map, uncertainty_map, gt_coord_map, mask=None, dist_threshold=0.05):
+    def CoordLossWithUncertainty(self, pred_coord_map, uncertainty_map, gt_coord_map,
+                                 mask=None, dist_threshold=0.05, transform=True, downsample=None):
         """
         loss = t + (x-mean)^2 / 2 exp(2t)
         :param pred_coord_map: BxHxWxC
@@ -189,6 +156,15 @@ class KFNet():
         batch_size = shape[0]
         height = shape[1]
         width = shape[2]
+        if transform is not None:
+            pred_coord_map = ApplyTransform(pred_coord_map, transform)
+
+        if downsample:
+            gt_coord_map = tf.image.resize_nearest_neighbor(gt_coord_map, [height, width])
+            if mask is not None:
+                mask = tf.image.resize_nearest_neighbor(mask, [height, width])
+                mask = tf.cast(tf.equal(mask, 1.0), tf.float32)
+
         diff_coord_map = tf.reduce_sum(tf.square(pred_coord_map - gt_coord_map), axis=-1, keepdims=True, name='diff_coord_map')  # BxHxWx1
         uncertainty_map = tf.maximum(uncertainty_map, self.min_uncertainty, name='uncertainty_map')
         loss_map = tf.add(3.0 * tf.log(uncertainty_map), diff_coord_map / (2. * tf.square(uncertainty_map)), name='loss_map')
@@ -290,7 +266,7 @@ class KFNet():
                             seed=self.seed,
                             reuse=self.reuse)
 
-    def BuildOFlowNet(self):
+    def BuildOFlowFeat(self):
         with tf.variable_scope('Temporal'):
             images = tf.multiply(tf.subtract(self.images, 128.0), 0.00625)
             feat_maps = tf.layers.conv2d(images, filters=16, kernel_size=3, strides=1, activation=tf.nn.relu,
@@ -461,7 +437,7 @@ class KFNet():
         feat_map1 = tf.slice(self.temp_feat_maps, [0, 0, 0, 0], [1, -1, -1, -1])
         feat_map2 = tf.slice(self.temp_feat_maps, [1, 0, 0, 0], [1, -1, -1, -1])
 
-        temp_coord2, temp_uncertainty2 = self.BuildCoordFlowNet(feat_map1, feat_map2, coord_map1, uncertainty1)
+        temp_coord2, temp_uncertainty2 = self.BuildOFlowNet(feat_map1, feat_map2, coord_map1, uncertainty1)
         return temp_coord2, temp_uncertainty2
 
     def GetKFCoord2(self, KF_coord_map1, KF_uncertainty1):

@@ -19,6 +19,7 @@ tf.app.flags.DEFINE_boolean('fix_flownet', False, """Flag to fix flownet""")
 tf.app.flags.DEFINE_integer('gpu', 0, """GPU id.""")
 tf.app.flags.DEFINE_string('scene', '', """Path to save the model.""")
 tf.app.flags.DEFINE_integer('reset_step', -1, """Reset training step.""")
+tf.app.flags.DEFINE_boolean('NIS', False, """Flag to NIS""")
 
 # Params for solver.
 tf.app.flags.DEFINE_float('base_lr', 0.0001,
@@ -94,23 +95,10 @@ def get_indexes(is_training):
             groups.append([i + 3, i + 2, i + 1, i])
         return groups
     def _get_full_groups_in_range(start, end):
-        groups = [[start+3, start+2, start+1, start],
-                  [start+4, start+3, start+2, start+1],
-                  [start+5, start+4, start+3, start+2]]
-        for i in range(start, end - 3):
-            groups.append([i, i + 1, i + 2, i + 3])
+        groups = [[start+1, start]]
+        for i in range(start, end - 1):
+            groups.append([i, i + 1])
         return groups
-    def _groups_from_pair(pairs):
-        groups = []
-        for pair in pairs:
-            groups.append([pair[0], pair[1], pair[1]+1, pair[1]+2])
-            groups.append([pair[0] - 1, pair[0], pair[1], pair[1]+1])
-            groups.append([pair[0] - 2, pair[0] - 1, pair[0], pair[1]])
-            groups.append([pair[1] + 2, pair[1] + 1, pair[1], pair[0]])
-            groups.append([pair[1] + 1, pair[1], pair[0], pair[0] - 1])
-            groups.append([pair[1], pair[0], pair[0] - 1, pair[0] - 2])
-        return groups
-
     groups = []
     blind_groups = []
 
@@ -118,8 +106,7 @@ def get_indexes(is_training):
         if is_training:
             groups += _get_groups_in_range(0, 1000)
             groups += _get_groups_in_range(1000, 2000)
-            groups += _get_groups_in_range(2000, 2924)
-            groups += _get_groups_in_range(2944, 3000)
+            groups += _get_groups_in_range(2000, 3000)
             groups += _get_groups_in_range(3000, 4000)
         else:
             groups += _get_full_groups_in_range(0, 1000)
@@ -144,8 +131,6 @@ def get_indexes(is_training):
             groups += _get_groups_in_range(3000, 4000)
             groups += _get_groups_in_range(4000, 5000)
             groups += _get_groups_in_range(5000, 6000)
-            pairs = [[236, 237], [237, 238], [241, 242], [242, 243], [246, 247], [255, 256], [256, 257], [258, 259], [259, 260], [385, 386], [386, 387], [400, 401], [413, 414], [414, 415], [601, 602], [602, 603], [622, 623], [624, 625], [651, 652], [723, 724], [731, 732], [787, 788], [788, 789], [861, 862], [862, 863], [869, 870], [870, 871], [875, 876], [987, 988], [988, 989], [1173, 1174], [1174, 1175], [1276, 1277], [1283, 1284], [1293, 1294], [1492, 1493], [1544, 1545], [1545, 1546], [1662, 1663], [1663, 1664], [1673, 1674], [1674, 1675], [1688, 1689], [1689, 1690], [1700, 1701], [1747, 1748], [1748, 1749], [1851, 1852], [2238, 2239], [2239, 2240], [2251, 2252], [2359, 2360], [2779, 2780], [3022, 3023], [3023, 3024], [3058, 3059], [3143, 3144], [3261, 3262], [3307, 3308], [3315, 3316], [3318, 3319], [3321, 3322], [3661, 3662], [3672, 3673], [3674, 3675], [3709, 3710], [3867, 3868], [3877, 3878], [3878, 3879], [3884, 3885], [4073, 4074], [4074, 4075], [4093, 4094], [4099, 4100], [4104, 4105], [4194, 4195], [4195, 4196], [4199, 4200], [4200, 4201], [4284, 4285], [4285, 4286], [4339, 4340], [4340, 4341], [4458, 4459], [4462, 4463], [4484, 4485], [4495, 4496], [4589, 4590], [4652, 4653], [4653, 4654], [4717, 4718], [4718, 4719], [4743, 4744], [4750, 4751], [4751, 4752], [4754, 4755], [4756, 4757], [4757, 4758], [4758, 4759], [4759, 4760], [4760, 4761], [4761, 4762], [4766, 4767], [4767, 4768], [4944, 4945], [4951, 4952], [4952, 4953], [4980, 4981], [5129, 5130], [5136, 5137], [5153, 5154], [5238, 5239], [5239, 5240], [5259, 5260], [5260, 5261], [5269, 5270], [5270, 5271], [5275, 5276], [5276, 5277], [5319, 5320], [5433, 5434], [5434, 5435], [5604, 5605], [5642, 5643], [5643, 5644], [5646, 5647], [5647, 5648], [5650, 5651], [5651, 5652], [5660, 5661], [5661, 5662], [5673, 5674], [5674, 5675], [5742, 5743], [5774, 5775], [5776, 5777], [5829, 5830], [5876, 5877], [5877, 5878], [5979, 5980]]
-            blind_groups = _groups_from_pair(pairs)
         else:
             groups += _get_full_groups_in_range(0, 1000)
             groups += _get_full_groups_in_range(1000, 2000)
@@ -157,8 +142,6 @@ def get_indexes(is_training):
             groups += _get_groups_in_range(1000, 2000)
             groups += _get_groups_in_range(2000, 3000)
             groups += _get_groups_in_range(3000, 4000)
-            pairs = [[25, 26], [131, 132], [132, 133], [145, 146], [156, 157], [244, 245], [245, 246], [250, 251], [265, 266], [266, 267], [270, 271], [276, 277], [277, 278], [316, 317], [317, 318], [318, 319], [320, 321], [361, 362], [362, 363], [484, 485], [524, 525], [525, 526], [532, 533], [555, 556], [1130, 1131], [1188, 1189], [1189, 1190], [1199, 1200], [1200, 1201], [1229, 1230], [1352, 1353], [1896, 1897], [1897, 1898], [2248, 2249], [2264, 2265], [2266, 2267], [2283, 2284], [2284, 2285], [2292, 2293], [2293, 2294], [2447, 2448], [2462, 2463], [2463, 2464], [2470, 2471], [2859, 2860], [2860, 2861], [2871, 2872], [2872, 2873], [2879, 2880], [2926, 2927], [3084, 3085], [3085, 3086], [3087, 3088], [3103, 3104], [3318, 3319], [3337, 3338], [3338, 3339], [3499, 3500], [3511, 3512], [3553, 3554], [3557, 3558], [3735, 3736], [3736, 3737], [3738, 3739], [3746, 3747], [3747, 3748], [3751, 3752], [3752, 3753], [3814, 3815], [3815, 3816], [3816, 3817], [3820, 3821], [3842, 3843], [3845, 3846], [3846, 3847], [3958, 3959], [3960, 3961], [3961, 3962], [3964, 3965], [3965, 3966], [3975, 3976], [3976, 3977], [3983, 3984], [3985, 3986], [3990, 3991]]
-            blind_groups = _groups_from_pair(pairs)
         else:
             groups += _get_full_groups_in_range(0, 1000)
             groups += _get_full_groups_in_range(1000, 2000)
@@ -171,8 +154,6 @@ def get_indexes(is_training):
             groups += _get_groups_in_range(4000, 5000)
             groups += _get_groups_in_range(5000, 6000)
             groups += _get_groups_in_range(6000, 7000)
-            pairs = [[121, 122], [178, 179], [312, 313], [340, 341], [345, 346], [346, 347], [447, 448], [453, 454], [733, 734], [917, 918], [1055, 1056], [1520, 1521], [1626, 1627], [1627, 1628], [1711, 1712], [1718, 1719], [1719, 1720], [1856, 1857], [1945, 1946], [1946, 1947], [2142, 2143], [2143, 2144], [2212, 2213], [2213, 2214], [2228, 2229], [2287, 2288], [2288, 2289], [2317, 2318], [2318, 2319], [2411, 2412], [2412, 2413], [2419, 2420], [2420, 2421], [2436, 2437], [2497, 2498], [2498, 2499], [2574, 2575], [2581, 2582], [2582, 2583], [2623, 2624], [2722, 2723], [2898, 2899], [2973, 2974], [2974, 2975], [3191, 3192], [3192, 3193], [3215, 3216], [3216, 3217], [3221, 3222], [3222, 3223], [3303, 3304], [3461, 3462], [3485, 3486], [3511, 3512], [3513, 3514], [4099, 4100], [4100, 4101], [4125, 4126], [4126, 4127], [4130, 4131], [4131, 4132], [4135, 4136], [4136, 4137], [4155, 4156], [4156, 4157], [4208, 4209], [4209, 4210], [4359, 4360], [4360, 4361], [4427, 4428], [4504, 4505], [4505, 4506], [4550, 4551], [4551, 4552], [4552, 4553], [4706, 4707], [4726, 4727], [5092, 5093], [5093, 5094], [5163, 5164], [5219, 5220], [5231, 5232], [5232, 5233], [5356, 5357], [5357, 5358], [5362, 5363], [5419, 5420], [5420, 5421], [5444, 5445], [5783, 5784], [5784, 5785], [5850, 5851], [6051, 6052], [6052, 6053], [6318, 6319], [6333, 6334], [6334, 6335], [6337, 6338], [6338, 6339], [6399, 6400], [6503, 6504], [6504, 6505], [6512, 6513], [6513, 6514], [6542, 6543], [6543, 6544], [6590, 6591], [6591, 6592], [6778, 6779], [6779, 6780]]
-            blind_groups = _groups_from_pair(pairs)
         else:
             groups += _get_full_groups_in_range(0, 1000)
             groups += _get_full_groups_in_range(1000, 2000)
@@ -241,20 +222,17 @@ def data_augmentation(image, coord_map, image_pixel_map, spec):
 
     return image_crop, coord_map_crop, pixel_map_crop
 
-def get_training_data(image_list, label_list, pose_file, spec, is_training=True):
+def get_training_data(image_list, label_list, spec):
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
-    with tf.device('/CPU:0'):
-        poses = tf.decode_raw(tf.read_file(pose_file), tf.float32)
-    poses = tf.reshape(poses, [-1, 4, 4], name='poses')
 
-    groups = get_indexes(is_training)
+    groups = get_indexes(False)
     indexes = [str(i) for i in range(len(groups))]
     groups = tf.stack(groups, axis=0, name='group_indexes')
 
     with tf.name_scope('data_queue'):
         with tf.device('/CPU:0'):
-            index_queue = tf.train.string_input_producer(indexes, shuffle=is_training or FLAGS.shuffle)
+            index_queue = tf.train.string_input_producer(indexes, shuffle=FLAGS.shuffle)
             index = tf.string_to_number(index_queue.dequeue(), out_type=tf.int32)
             group = tf.squeeze(tf.slice(groups, [index, 0], [1, -1]), name='group') # B
             group_image_paths = tf.gather(image_paths, group)
@@ -262,8 +240,6 @@ def get_training_data(image_list, label_list, pose_file, spec, is_training=True)
 
             images = []
             labels = []
-            pixel_maps = []
-            local_poses = []
             for i in range(spec.batch_size):
                 image_path = tf.squeeze(tf.slice(group_image_paths, [i], [1]))
                 image = tf.image.decode_png(tf.read_file(image_path), channels=spec.channels)
@@ -275,37 +251,50 @@ def get_training_data(image_list, label_list, pose_file, spec, is_training=True)
                 label = tf.decode_raw(tf.read_file(label_path), tf.float32)
                 label = tf.reshape(label, label_shape)
 
-                pixel_map = get_pixel_map(spec.image_size[0], spec.image_size[1], spec)
-
-                local_pose = tf.squeeze(tf.slice(poses, [group[i], 0, 0], [1, -1, -1]))
-
                 images.append(image)
                 labels.append(label)
-                pixel_maps.append(pixel_map)
-                local_poses.append(local_pose)
 
             images = tf.stack(images, axis=0)   # BxHxWx3
             labels = tf.stack(labels, axis=0)  # BxHxWx4
-            pixel_maps = tf.stack(pixel_maps, axis=0)   # BxHxWx2
-            local_poses = tf.stack(local_poses, axis=0)  # Bx4x4
-
-            if is_training:
-                images, labels, pixel_maps = data_augmentation(images, labels, pixel_maps, spec)
 
             coords = tf.slice(labels, [0, 0, 0, 0], [-1, -1, -1, 3])
             masks = tf.slice(labels, [0, 0, 0, 3], [-1, -1, -1, 1])
 
-        if is_training:
-            num_threads = 40
-        else:
-            num_threads = 1
         with tf.device('/CPU:0'):
             return tf.train.batch(
-                [images, coords, masks, pixel_maps, local_poses, group],
+                [images, coords, masks, group],
                 batch_size=spec.batch_size,
                 capacity=spec.batch_size * 4,
                 enqueue_many=True,
-                num_threads=num_threads)
+                num_threads=1)
+
+def KF_fusion(image_list, label_list, last_coord, last_uncertainty, spec):
+    images, gt_coords, masks, group_indexes = \
+        get_training_data(image_list, label_list, spec)
+
+    sfmnet = KFNet(images, spec, train_scoordnet=False, train_oflownet=False)
+
+    measure_coord, measure_uncertainty = sfmnet.GetMeasureCoord2()
+    temp_coord, temp_uncertainty, KF_coord, KF_uncertainty = \
+        sfmnet.GetKFCoord(last_coord, last_uncertainty)
+    NIS = sfmnet.GetNIS(measure_coord, measure_uncertainty, temp_coord, temp_uncertainty)   # 1xHxWx3
+
+    transform = get_7scene_transform()
+    measure_loss, measure_accuracy = sfmnet.CoordLossWithUncertainty(measure_coord, measure_uncertainty, gt_coords,
+                                                                     mask=masks, transform=transform, downsample=True)
+    temp_loss, temp_accuracy = sfmnet.CoordLossWithUncertainty(temp_coord, temp_uncertainty, gt_coords,
+                                                               mask=masks, transform=transform, downsample=True)
+    KF_loss, KF_accuracy = sfmnet.CoordLossWithUncertainty(KF_coord, KF_uncertainty, gt_coords,
+                                                           mask=masks, transform=transform, downsample=True)
+
+    resize = [spec.image_size[0] / 8, spec.image_size[1] / 8]
+    gt_coords_8 = tf.image.resize_nearest_neighbor(gt_coords, resize)
+    masks_8 = tf.image.resize_nearest_neighbor(masks, resize)
+
+    return measure_coord, measure_uncertainty,\
+           temp_coord, temp_uncertainty, KF_coord, KF_uncertainty, NIS, group_indexes, \
+           measure_loss, measure_accuracy, temp_loss, temp_accuracy, KF_loss, KF_accuracy, \
+           gt_coords_8, masks_8
 
 def run(image_list, label_list, pose_file, spec, is_training=True):
     with tf.name_scope('data'):
