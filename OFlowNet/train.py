@@ -41,8 +41,8 @@ tf.app.flags.DEFINE_string('input_folder', '', """Path to data.""")
 tf.app.flags.DEFINE_string('model_folder', '', """Path to model.""")
 tf.app.flags.DEFINE_string('output_folder', '', """Path to output.""")
 tf.app.flags.DEFINE_string('finetune_folder', '', """Path to output.""")
-tf.app.flags.DEFINE_string('flownet', '', """Path to flownet model.""")
-tf.app.flags.DEFINE_string('scorenet', '', """Path to scorenet model.""")
+tf.app.flags.DEFINE_string('oflownet', '', """Path to OFlowNet model.""")
+tf.app.flags.DEFINE_string('scoordnet', '', """Path to SCoordNet model.""")
 
 def get_groups(is_training):
     def _get_group_from_range(start, end):
@@ -297,7 +297,7 @@ def run(image_list, label_list, spec, is_training=True):
         shift_masks = tf.concat([mask1, mask2], axis=0, name='masks')
 
     kfnet = KFNet(images, noise_gt_coords, gt_uncertainty, spec.focal_x, spec.focal_y, spec.u, spec.v,
-                    train_scorenet=False, train_oflownet=is_training, reuse=tf.AUTO_REUSE)
+                    train_scoordnet=False, train_oflownet=is_training, reuse=tf.AUTO_REUSE)
 
     with tf.name_scope('loss'):
         measure_coord_loss, measure_coord_accuracy = kfnet.CoordLossWithUncertainty(noise_gt_coords, gt_uncertainty, gt_coords, masks)

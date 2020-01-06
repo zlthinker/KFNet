@@ -52,7 +52,7 @@ class KFNetDataSpec():
 class KFNet():
     def __init__(self, images, gt_coords, gt_uncertainty,
                  focal_x, focal_y, u, v,
-                 train_scorenet, train_oflownet, dropout_rate=0.5, seed=None, reuse=tf.AUTO_REUSE):
+                 train_scoordnet, train_oflownet, dropout_rate=0.5, seed=None, reuse=tf.AUTO_REUSE):
         self.images = images  # A sequence of images - BxHxWx3
         self.gt_coords = gt_coords
         self.gt_uncertainty = gt_uncertainty
@@ -63,7 +63,7 @@ class KFNet():
         self.v = v
 
         self.reuse = reuse
-        self.train_scorenet = train_scorenet
+        self.train_scoordnet = train_scoordnet
         self.train_oflownet = train_oflownet
         self.seed = seed
         self.dropout_rate = dropout_rate
@@ -79,12 +79,6 @@ class KFNet():
     ####################### I/O #######################
     def GetInputImages(self):
         return self.images
-
-    def GetCoord(self):
-        return self.scorenet.GetOutputCoord()
-
-    def GetUncertainty(self):
-        return self.scorenet.GetUncertainty()
 
     def GetTemporalCoord(self):
         # extract features
