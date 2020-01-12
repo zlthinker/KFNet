@@ -29,7 +29,7 @@ def median_uncertainty(uncertainty, mask):
     data_array = filter(lambda x: x > 0, data_array)
     return np.median(data_array) * 100.0
 
-def eval(image_list, label_list, output_folder, snapshot, debug=False):
+def eval(image_list, label_list, transform_file, output_folder, snapshot, debug=False):
     print image_list
     print label_list
 
@@ -54,7 +54,7 @@ def eval(image_list, label_list, output_folder, snapshot, debug=False):
     indexes = get_indexes(image_num, False)
     print indexes
     scoordnet, images, coords, uncertainty, gt_coords, mask, image_indexes = \
-        run_testing(indexes, image_list, label_list, spec)
+        run_testing(indexes, image_list, label_list, transform_file, spec)
 
     # configuration
     config = tf.ConfigProto(log_device_placement=False)
@@ -145,8 +145,9 @@ def main(_):
 
     image_list = os.path.join(FLAGS.input_folder, 'image_list.txt')
     label_list = os.path.join(FLAGS.input_folder, 'label_list.txt')
+    transform_file = os.path.join(FLAGS.input_folder, 'transform.txt')
 
-    eval(image_list, label_list, FLAGS.output_folder, snapshot, FLAGS.debug)
+    eval(image_list, label_list, transform_file, FLAGS.output_folder, snapshot, FLAGS.debug)
 
 if __name__ == '__main__':
     tf.app.run()

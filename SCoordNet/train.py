@@ -29,64 +29,6 @@ def set_stepvalue():
     elif FLAGS.scene == 'stairs':
         FLAGS.stepvalue = 100000
         FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'apt1-kitchen':
-        FLAGS.stepvalue = 30000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'apt1-living':
-        FLAGS.stepvalue = 30000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'apt2-bed':
-        FLAGS.stepvalue = 30000
-    elif FLAGS.scene == 'apt2-kitchen':
-        FLAGS.stepvalue = 30000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'apt2-living':
-        FLAGS.stepvalue = 70000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'apt2-luke':
-        FLAGS.stepvalue = 140000
-    elif FLAGS.scene == 'office1-gates362':
-        FLAGS.stepvalue = 70000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'office1-gates381':
-        FLAGS.stepvalue = 140000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'office1-lounge':
-        FLAGS.stepvalue = 70000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'office1-manolis':
-        FLAGS.stepvalue = 70000
-    elif FLAGS.scene == 'office2-5a':
-        FLAGS.stepvalue = 70000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'office2-5b':
-        FLAGS.stepvalue = 140000
-        FLAGS.max_steps = FLAGS.stepvalue * 5
-    elif FLAGS.scene == 'GreatCourt':
-        FLAGS.stepvalue = 1200000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
-    elif FLAGS.scene == 'KingsCollege':
-        FLAGS.stepvalue = 200000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
-    elif FLAGS.scene == 'OldHospital':
-        FLAGS.stepvalue = 200000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
-    elif FLAGS.scene == 'ShopFacade':
-        FLAGS.stepvalue = 200000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
-    elif FLAGS.scene == 'StMarysChurch':
-        FLAGS.stepvalue = 200000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
-    elif FLAGS.scene == 'Street':
-        FLAGS.stepvalue = 3000000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
-    elif FLAGS.scene == 'Street-east' or FLAGS.scene == 'Street-west' or FLAGS.scene == 'Street-south' \
-            or FLAGS.scene == 'Street-north1' or FLAGS.scene == 'Street-north2':
-        FLAGS.stepvalue = 200000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
-    elif FLAGS.scene == 'DeepLoc':
-        FLAGS.stepvalue = 200000
-        FLAGS.max_steps = FLAGS.stepvalue * 3
     else:
         print 'Invalid scene:', FLAGS.scene
         exit()
@@ -118,7 +60,7 @@ def solver(loss):
             loss + reg_loss, global_step=global_step)
     return opt, lr_op, reg_loss
 
-def train(image_list, label_list, out_dir, \
+def train(image_list, label_list, transform_file, out_dir, \
           snapshot=None, init_step=0, debug=False):
 
     print image_list
@@ -130,18 +72,6 @@ def train(image_list, label_list, out_dir, \
     spec.scene = FLAGS.scene
     set_stepvalue()
 
-    if FLAGS.scene == 'GreatCourt' or FLAGS.scene == 'KingsCollege' or \
-        FLAGS.scene == 'OldHospital' or FLAGS.scene == 'ShopFacade' or \
-        FLAGS.scene == 'StMarysChurch' or FLAGS.scene == 'Street' or \
-        FLAGS.scene == 'Street-east' or FLAGS.scene == 'Street-west' or \
-        FLAGS.scene == 'Street-south' or FLAGS.scene == 'Street-north1' or \
-        FLAGS.scene == 'Street-north2':
-        spec.image_size = (480, 848)
-        spec.crop_size = (480, 848)
-    elif FLAGS.scene == 'DeepLoc':
-        spec.image_size = (480, 864)
-        spec.crop_size = (480, 864)
-
     print "--------------------------------"
     print "scene:", spec.scene
     print "batch size: ", spec.batch_size
@@ -151,7 +81,7 @@ def train(image_list, label_list, out_dir, \
 
     raw_input("Please check the meta info, press any key to continue...")
 
-    loss, coord_loss, smooth_loss, accuracy, batch_indexes = run_training(image_list, label_list)
+    loss, coord_loss, smooth_loss, accuracy, batch_indexes = run_training(image_list, label_list, transform_file)
 
     print '# trainable parameters: ', get_num_trainable_params()
 
@@ -222,8 +152,9 @@ def main(_):
 
     image_list = os.path.join(FLAGS.input_folder, 'image_list.txt')
     label_list = os.path.join(FLAGS.input_folder, 'label_list.txt')
+    transform_file = os.path.join(FLAGS.input_folder, 'transform.txt')
 
-    train(image_list, label_list, FLAGS.model_folder,
+    train(image_list, label_list, transform_file, FLAGS.model_folder,
           snapshot, step, FLAGS.debug)
 
 
