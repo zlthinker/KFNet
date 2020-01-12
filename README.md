@@ -4,9 +4,10 @@ Learning Temporal Camera Relocalization using Kalman Filtering
 
 ## About
 
-![Alt Text](doc/fire_KFNet_pip.gif)
 
-![Alt Text](doc/fire_DSAC++_pip.gif)
+| DSAC++ | KFNet |
+|:--:|:--:|
+| ![Alt Text](doc/fire_KFNet_pip.gif) | ![Alt Text](doc/fire_DSAC++_pip.gif) |
 
 ## How to use
 
