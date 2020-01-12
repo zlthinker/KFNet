@@ -48,10 +48,12 @@ def eval(image_list, label_list, transform_file, snapshot):
 
     last_coord = tf.get_variable('last_coord', [1, spec.image_size[0]//8, spec.image_size[1]//8, 3], trainable=False)
     last_uncertainty = tf.get_variable('last_uncertainty', [1, spec.image_size[0]//8, spec.image_size[1]//8, 1], trainable=False)
+    transform = get_7scene_transform(transform_file)
+
     measure_coord, measure_uncertainty, temp_coord, temp_uncertainty, KF_coord, KF_uncertainty, NIS, indexes, \
     measure_loss, measure_accuracy, temp_loss, temp_accuracy, KF_loss, KF_accuracy, gt_coords, masks \
-        = KF_fusion(image_list, label_list, last_coord, last_uncertainty, spec)
-    transform = get_7scene_transform(transform_file)
+        = KF_fusion(image_list, label_list, transform, last_coord, last_uncertainty, spec)
+
     trans_measure_coord = ApplyTransform(measure_coord, transform)
     trans_temp_coord = ApplyTransform(temp_coord, transform)
     trans_KF_coord = ApplyTransform(KF_coord, transform)

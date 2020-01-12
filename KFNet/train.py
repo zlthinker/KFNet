@@ -50,12 +50,12 @@ def get_7scene_transform(transform_file = None):
     if transform_file:
         transform = np.loadtxt(transform_file, dtype=np.float32)
         transform = np.linalg.inv(transform)
-        return tf.convert_to_tensor(transform)
     else:
-        return tf.constant([[1.0, 0.0, 0.0, 0.0],
+        transform = np.array([[1.0, 0.0, 0.0, 0.0],
                               [0.0, 1.0, 0.0, 0.0],
                               [0.0, 0.0, 1.0, 0.0],
                               [0.0, 0.0, 0.0, 1.0]])
+    return tf.constant(transform)
 
 def get_indexes(is_training):
     def _get_groups_in_range(start, end):
@@ -238,7 +238,7 @@ def get_training_data(image_list, label_list, spec):
                 enqueue_many=True,
                 num_threads=1)
 
-def KF_fusion(image_list, label_list, last_coord, last_uncertainty, spec):
+def KF_fusion(image_list, label_list, transform, last_coord, last_uncertainty, spec):
     images, gt_coords, masks, group_indexes = \
         get_training_data(image_list, label_list, spec)
 
@@ -249,7 +249,6 @@ def KF_fusion(image_list, label_list, last_coord, last_uncertainty, spec):
         sfmnet.GetKFCoord(last_coord, last_uncertainty)
     NIS = sfmnet.GetNIS(measure_coord, measure_uncertainty, temp_coord, temp_uncertainty)   # 1xHxWx3
 
-    transform = get_7scene_transform()
     measure_loss, measure_accuracy = sfmnet.CoordLossWithUncertainty(measure_coord, measure_uncertainty, gt_coords,
                                                                      mask=masks, transform=transform, downsample=True)
     temp_loss, temp_accuracy = sfmnet.CoordLossWithUncertainty(temp_coord, temp_uncertainty, gt_coords,
