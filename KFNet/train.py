@@ -46,46 +46,16 @@ tf.app.flags.DEFINE_string('output_folder', '', """Path to output.""")
 tf.app.flags.DEFINE_string('flownet', '', """Path to flownet model.""")
 tf.app.flags.DEFINE_string('scorenet', '', """Path to scorenet model.""")
 
-def get_7scene_transform():
-    if FLAGS.scene == 'chess':
-        transform = tf.constant([[0.95969, 0.205793, -0.191428, 0.207924],
-                              [0.0738071, 0.47266, 0.878149, -0.190767],
-                              [0.271197, -0.856879, 0.438418, 1.71634],
-                              [0, 0, 0, 1]])
-    elif FLAGS.scene == 'fire':
-        transform = tf.constant([[0.999908, 0.0125542, -0.00509274, -0.306473],
-                              [0.0110424, -0.537429, 0.843236, 0.297648],
-                              [-0.00784919, 0.843215, 0.537519, 1.73969],
-                              [0, 0, 0, 1]])
-    elif FLAGS.scene == 'heads':
-        transform = tf.constant([[0.982153, 0.159748, 0.0992782, 0.20507],
-                              [0.0660033, -0.787006, 0.613405, 0.0496231],
-                              [-0.176123, 0.595904, 0.783504, 0.829125],
-                              [0, 0, 0, 1]])
-    elif FLAGS.scene == 'office':
-        transform = tf.constant([[0.995655, 0.0930714, -0.00300323, -0.188047],
-                              [-0.039624, 0.452633, 0.890816, -0.473323],
-                              [0.0842688, -0.886826, 0.454354, 2.31595],
-                              [0, 0, 0, 1]])
-    elif FLAGS.scene == 'pumpkin':
-        transform = tf.constant([[0.984219, 0.0694752, -0.162745, -0.489651],
-                              [-0.0569574, 0.995137, 0.080364, -1.41071],
-                              [0.167537, -0.0698263, 0.98339, 2.32241],
-                              [0, 0, 0, 1]])
-    elif FLAGS.scene == 'redkitchen':
-        transform = tf.constant([[0.968627, 0.248297, -0.0104599, -0.610452],
-                              [-0.130742, 0.544927, 0.828228, -0.337849],
-                              [0.211346, -0.800876, 0.560294, 2.50185],
-                              [0, 0, 0, 1]])
-    elif FLAGS.scene == 'stairs':
-        transform = tf.constant([[0.157028, -0.980771, 0.115889, 0.0705374],
-                              [-0.562567, 0.00761531, 0.826717, -0.55947],
-                              [0.811702, 0.195013, 0.550554, 2.30206],
-                              [0, 0, 0, 1]])
+def get_7scene_transform(transform_file = None):
+    if transform_file:
+        transform = np.loadtxt(transform_file, dtype=np.float32)
+        transform = np.linalg.inv(transform)
+        return tf.convert_to_tensor(transform)
     else:
-        print 'Invalid scene:', FLAGS.scene
-        exit()
-    return transform
+        return tf.constant([[1.0, 0.0, 0.0, 0.0],
+                              [0.0, 1.0, 0.0, 0.0],
+                              [0.0, 0.0, 1.0, 0.0],
+                              [0.0, 0.0, 0.0, 1.0]])
 
 def get_indexes(is_training):
     def _get_groups_in_range(start, end):

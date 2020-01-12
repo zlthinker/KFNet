@@ -28,7 +28,7 @@ def dist_error(coords, gt_coords, mask):
     data_array = filter(lambda x: x > 0, data_array)
     return np.median(data_array) * 100.0, dists * 100
 
-def eval(image_list, label_list, snapshot):
+def eval(image_list, label_list, transform_file, snapshot):
 
     print image_list
     print label_list
@@ -51,7 +51,7 @@ def eval(image_list, label_list, snapshot):
     measure_coord, measure_uncertainty, temp_coord, temp_uncertainty, KF_coord, KF_uncertainty, NIS, indexes, \
     measure_loss, measure_accuracy, temp_loss, temp_accuracy, KF_loss, KF_accuracy, gt_coords, masks \
         = KF_fusion(image_list, label_list, last_coord, last_uncertainty, spec)
-    transform = get_7scene_transform()
+    transform = get_7scene_transform(transform_file)
     trans_measure_coord = ApplyTransform(measure_coord, transform)
     trans_temp_coord = ApplyTransform(temp_coord, transform)
     trans_KF_coord = ApplyTransform(KF_coord, transform)
@@ -187,8 +187,9 @@ def main(_):
 
     image_list = os.path.join(FLAGS.input_folder, 'image_list.txt')
     label_list = os.path.join(FLAGS.input_folder, 'label_list.txt')
+    transform_file = os.path.join(FLAGS.input_folder, 'transform.txt')
 
-    eval(image_list, label_list, snapshot)
+    eval(image_list, label_list, transform_file, snapshot)
 
 if __name__ == '__main__':
     tf.app.run()
