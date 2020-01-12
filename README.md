@@ -6,7 +6,7 @@ Learning Temporal Camera Relocalization using Kalman Filtering
 
 ![Alt Text](doc/fire_KFNet_pip.gif)
 
-![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
+![Alt Text](doc/fire_DSAC++_pip.gif)
 
 ## How to use
 
