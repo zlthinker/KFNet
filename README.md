@@ -26,7 +26,7 @@ The codes are tested along with python 2.7 and tensorflow-gpu 1.12.
 
 ### Testing
 
-The testing program outputs the 3-d scene coordinates (in meters) and 1-d uncertainties into 4-channel numpy matrices. The saved uncertainties are the inverse of predicted Gaussain variances. Thus, the larger the uncertaines, the smaller the variances are.
+The testing program outputs a 3-d scene coordinate map (in meters) and 1-d confidence map into 4-channel numpy matrices. The confidences are the inverse of predicted Gaussain variances / uncertainties. Thus, the larger the confidences, the smaller the variances are.
 
 * Test SCoordNet
 ```

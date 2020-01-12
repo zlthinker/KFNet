@@ -58,16 +58,6 @@ def eval(image_list, label_list, transform_file, snapshot):
     trans_temp_coord = ApplyTransform(temp_coord, transform)
     trans_KF_coord = ApplyTransform(KF_coord, transform)
     init_op = tf.global_variables_initializer()
-    if os.path.isdir(FLAGS.output_folder):
-        measure_folder = os.path.join(FLAGS.output_folder, 'measure_match')
-        if not os.path.isdir(measure_folder):
-            os.mkdir(measure_folder)
-        temp_folder = os.path.join(FLAGS.output_folder, 'temp_match')
-        if not os.path.isdir(temp_folder):
-            os.mkdir(temp_folder)
-        KF_folder = os.path.join(FLAGS.output_folder, 'KF_match')
-        if not os.path.isdir(KF_folder):
-            os.mkdir(KF_folder)
 
     config = tf.ConfigProto(log_device_placement=False)
     config.gpu_options.allow_growth = True
@@ -130,19 +120,9 @@ def eval(image_list, label_list, transform_file, snapshot):
 
             if not FLAGS.show:
                 if os.path.isdir(FLAGS.output_folder):
-                    reg_values = np.concatenate([out_trans_measure_coord[-1, :, :, :], 1.0/out_measure_uncertainty[-1, :, :, :]], axis=-1)
-                    reg_values = reg_values.astype(np.float32)
-                    coord_save_path = os.path.join(measure_folder, 'coord_' + str(index) + '.npy')
-                    np.save(coord_save_path, reg_values)
-
-                    reg_values = np.concatenate([out_trans_temp_coord[-1, :, :, :], 1.0/out_temp_uncertainty[-1, :, :, :]], axis=-1)
-                    reg_values = reg_values.astype(np.float32)
-                    coord_save_path = os.path.join(temp_folder, 'coord_' + str(index) + '.npy')
-                    np.save(coord_save_path, reg_values)
-
                     reg_values = np.concatenate([out_trans_KF_coord[-1, :, :, :], 1.0/out_KF_uncertainty[-1, :, :, :]], axis=-1)
                     reg_values = reg_values.astype(np.float32)
-                    coord_save_path = os.path.join(KF_folder, 'coord_' + str(index) + '.npy')
+                    coord_save_path = os.path.join(FLAGS.output_folder, 'coord_' + str(index) + '.npy')
                     np.save(coord_save_path, reg_values)
             else:
                 weight_K = out_temp_uncertainty[-1, :, :, 0] / \
