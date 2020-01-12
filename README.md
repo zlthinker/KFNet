@@ -9,6 +9,7 @@ Learning Temporal Camera Relocalization using Kalman Filtering
 |:--:|:--:|:--:|
 |7scenes-fire       | ![Alt Text](doc/fire_DSAC++_pip.gif)       | ![Alt Text](doc/fire_KFNet_pip.gif)      |
 |12scenes-office2-5a| ![Alt Text](doc/office2_5a_DSAC++_pip.gif) | ![Alt Text](doc/office2_5a_KFNet_pip.gif)|
+|Description | Blue - ground truth poses   | Red - estimatd poses |
 
 ## How to use
 
