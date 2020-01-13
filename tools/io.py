@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-"""
-Copyright 2017, Zixin Luo, HKUST.
-IO tools.
-"""
-
 from __future__ import print_function
 
 import os, glob, re
