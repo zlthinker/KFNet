@@ -52,6 +52,7 @@ def get_groups(image_num):
         return group
 
     groups = _get_group_from_range(0, image_num)
+    print 'Groups of consecutive image pairs for training:', groups
     return groups
 
 def data_augmentation(image, coord_map, spec):
