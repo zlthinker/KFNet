@@ -34,7 +34,7 @@ The testing program outputs a 3-d scene coordinate map (in meters) and a 1-d con
 ```
 git checkout SCoordNet
 python SCoordnet/eval.py --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder> --scene <scene>
-# <scene> = chess/fire/heads/office/pumpkin/redkitchen/stairs, i.e., the scene names of 7scenes dataset
+# <scene> = chess/fire/heads/office/pumpkin/redkitchen/stairs, i.e., one of the scene names of 7scenes dataset
 ```
 
 * Test KFNet
@@ -52,6 +52,10 @@ python SCoordnet/train.py --input_folder <input_folder> --model_folder <model_fo
 ```
 
 * Train OFlowNet
+```
+git checkout OFlowNet
+python OFlowNet/train.py --input_folder <input_folder> --model_folder <model_folder>
+```
 
 * Train KFNet
 
