@@ -12,14 +12,12 @@ def eval(image_list, label_list, snapshot, out_dir):
     image_paths = read_lines(image_list)
 
     spec = KFNetDataSpec()
-    spec.scene = 'stairs'
     spec.batch_size = 2
     spec.image_num = len(image_paths)
     spec.sequence_length = 500
     spec.num_sequence = spec.image_num // spec.sequence_length
 
     print "----------------------------------"
-    print "scene: ", spec.scene
     print "image number: ", len(image_paths)
     print "sequence length: ", spec.sequence_length
     print "num sequence: ", spec.num_sequence

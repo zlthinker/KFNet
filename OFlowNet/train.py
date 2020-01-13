@@ -44,135 +44,14 @@ tf.app.flags.DEFINE_string('finetune_folder', '', """Path to output.""")
 tf.app.flags.DEFINE_string('oflownet', '', """Path to OFlowNet model.""")
 tf.app.flags.DEFINE_string('scoordnet', '', """Path to SCoordNet model.""")
 
-def get_groups(is_training):
+def get_groups(image_num):
     def _get_group_from_range(start, end):
         group = []
         for i in range(start, end - 1):
             group.append([i, i+1])
         return group
 
-    groups = []
-    blind_groups = []
-    if is_training:
-        if FLAGS.scene == '12scenes':
-            groups += _get_group_from_range(357, 715)
-            groups += _get_group_from_range(715, 1101)
-            groups += _get_group_from_range(1594, 2123)
-            groups += _get_group_from_range(2123, 2629)
-            groups += _get_group_from_range(2873, 3159)
-            groups += _get_group_from_range(3159, 3337)
-            groups += _get_group_from_range(3337, 3533)
-            groups += _get_group_from_range(3533, 3767)
-            groups += _get_group_from_range(3997, 4153)
-            groups += _get_group_from_range(4153, 4358)
-            groups += _get_group_from_range(4358, 4587)
-            groups += _get_group_from_range(4587, 4779)
-            groups += _get_group_from_range(5138, 5524)
-            groups += _get_group_from_range(5524, 5869)
-            groups += _get_group_from_range(6493, 7086)
-            groups += _get_group_from_range(7086, 7475)
-            groups += _get_group_from_range(7475, 7863)
-            groups += _get_group_from_range(8249, 9190)
-            groups += _get_group_from_range(9190, 10142)
-            groups += _get_group_from_range(10142, 11180)
-            groups += _get_group_from_range(11180, 11789)
-            groups += _get_group_from_range(12842, 13854)
-            groups += _get_group_from_range(13854, 14823)
-            groups += _get_group_from_range(14823, 15792)
-            groups += _get_group_from_range(16119, 16277)
-            groups += _get_group_from_range(16277, 16502)
-            groups += _get_group_from_range(16502, 16842)
-            groups += _get_group_from_range(16842, 17052)
-            groups += _get_group_from_range(17859, 18585)
-            groups += _get_group_from_range(18585, 19482)
-            groups += _get_group_from_range(19979, 20513)
-            groups += _get_group_from_range(20513, 20980)
-            groups += _get_group_from_range(21395, 21913)
-            groups += _get_group_from_range(21913, 22372)
-            groups += _get_group_from_range(22372, 22836)
-            blind_groups += [[2978, 2879], [3249, 3250], [3310, 3311], [3338, 3339], \
-                             [3356, 3357], [3364, 3365], [3538, 3539], [4156, 4157], \
-                             [4356, 4357], [4366, 4367], [5138, 5139], [5528, 5529], \
-                             [9192, 9193], [10142, 10143], [16120, 16121], [16121, 16122], \
-                             [16281, 16282], [16873, 16874], [16876, 16877], [17861, 17862], \
-                             [18015, 18016], [18591, 18592], [21419, 21420], [21929, 21930], \
-                             [22379, 22380], [3776, 3777], [4788, 4789], [17061, 17062], \
-                             [20989, 20990]]
-        elif FLAGS.scene == '7scenes':
-            groups += _get_group_from_range(0, 1000)
-            groups += _get_group_from_range(1000, 2000)
-            groups += _get_group_from_range(2000, 3000)
-            groups += _get_group_from_range(3000, 4000)
-            groups += _get_group_from_range(4000, 5000)
-            groups += _get_group_from_range(5000, 6000)
-            groups += _get_group_from_range(6000, 7000)
-            groups += _get_group_from_range(7000, 8000)
-            groups += _get_group_from_range(8000, 9000)
-            groups += _get_group_from_range(9000, 10000)
-            groups += _get_group_from_range(10000, 11000)
-            groups += _get_group_from_range(11000, 12000)
-            groups += _get_group_from_range(12000, 13000)
-            groups += _get_group_from_range(13000, 14000)
-            groups += _get_group_from_range(14000, 15000)
-            groups += _get_group_from_range(15000, 16000)
-            groups += _get_group_from_range(16000, 17000)
-            groups += _get_group_from_range(17000, 18000)
-            groups += _get_group_from_range(18000, 19000)
-            groups += _get_group_from_range(19000, 20000)
-            groups += _get_group_from_range(20000, 21000)
-            groups += _get_group_from_range(21000, 22000)
-            groups += _get_group_from_range(22000, 23000)
-            groups += _get_group_from_range(23000, 24000)
-            groups += _get_group_from_range(24000, 24500)
-            groups += _get_group_from_range(24500, 25000)
-            groups += _get_group_from_range(25000, 25500)
-            groups += _get_group_from_range(25500, 26000)
-    else:
-        if FLAGS.scene == '12scenes':
-            groups += _get_group_from_range(0, 357)
-            groups += _get_group_from_range(1101, 1594)
-            groups += _get_group_from_range(2629, 2873)
-            groups += _get_group_from_range(3767, 3997)
-            groups += _get_group_from_range(4779, 5138)
-            groups += _get_group_from_range(5869, 6493)
-            groups += _get_group_from_range(7863, 8249)
-            groups += _get_group_from_range(11789, 12842)
-            groups += _get_group_from_range(15792, 16119)
-            groups += _get_group_from_range(17052, 17859)
-            groups += _get_group_from_range(19482, 19979)
-            groups += _get_group_from_range(20980, 21395)
-            blind_groups += [[2978, 2879], [3249, 3250], [3310, 3311], [3338, 3339], \
-                             [3356, 3357], [3364, 3365], [3538, 3539], [4156, 4157], \
-                             [4356, 4357], [4366, 4367], [5138, 5139], [5528, 5529], \
-                             [9192, 9193], [10142, 10143], [16120, 16121], [16121, 16122], \
-                             [16281, 16282], [16873, 16874], [16876, 16877], [17861, 17862], \
-                             [18015, 18016], [18591, 18592], [21419, 21420], [21929, 21930], \
-                             [22379, 22380], [3776, 3777], [4788, 4789], [17061, 17062], \
-                             [20989, 20990]]
-        elif FLAGS.scene == '7scenes':
-            groups += _get_group_from_range(0, 1000)
-            groups += _get_group_from_range(1000, 2000)
-            groups += _get_group_from_range(2000, 3000)
-            groups += _get_group_from_range(3000, 4000)
-            groups += _get_group_from_range(4000, 5000)
-            groups += _get_group_from_range(5000, 6000)
-            groups += _get_group_from_range(6000, 7000)
-            groups += _get_group_from_range(7000, 8000)
-            groups += _get_group_from_range(8000, 9000)
-            groups += _get_group_from_range(9000, 10000)
-            groups += _get_group_from_range(10000, 11000)
-            groups += _get_group_from_range(11000, 12000)
-            groups += _get_group_from_range(12000, 13000)
-            groups += _get_group_from_range(13000, 14000)
-            groups += _get_group_from_range(14000, 15000)
-            groups += _get_group_from_range(15000, 16000)
-            groups += _get_group_from_range(16000, 16500)
-            groups += _get_group_from_range(16500, 17000)
-        else:
-            print 'Invalid scene:', FLAGS.scene
-            exit()
-
-    groups = [i for i in groups if i not in blind_groups]
+    groups = _get_group_from_range(0, image_num)
     return groups
 
 def data_augmentation(image, coord_map, spec):
@@ -205,8 +84,7 @@ def get_training_data(image_list, label_list, spec, is_training=True):
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
 
-
-    groups = get_groups(is_training)
+    groups = get_groups(len(image_paths))
     indexes = [str(i) for i in range(len(groups))]
     groups = tf.stack(groups, axis=0, name='group_indexes')
 
@@ -347,14 +225,12 @@ def train(image_list, label_list, out_dir, \
     print image_list
     image_paths = read_lines(image_list)
     spec = KFNetDataSpec()
-    spec.scene = FLAGS.scene
     spec.image_num = len(image_paths)
     spec.sequence_length = 500
     spec.num_sequence = spec.image_num // spec.sequence_length
     FLAGS.stepvalue = 100000
     FLAGS.max_steps = FLAGS.stepvalue * 5
     print "----------------------------------"
-    print "scene: ", spec.scene
     print "training image number: ", len(image_paths)
     print "batch size: ", spec.batch_size
     print "step value: ", FLAGS.stepvalue
