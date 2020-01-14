@@ -4,8 +4,12 @@ This is a Tensorflow implementation of "Learning Temporal Camera Relocalization 
 
 ## About
 
+### Network architecture
+
 ![Alt Text](doc/architecture.jpg)
 
+
+### Sample results on [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/) and [12scenes](http://graphics.stanford.edu/projects/reloc/)
 
 || DSAC++ | KFNet |
 |:--:|:--:|:--:|
