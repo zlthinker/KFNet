@@ -6,7 +6,9 @@ This is a Tensorflow implementation of "Learning Temporal Camera Relocalization 
 
 ### Network architecture
 
-![Alt Text](doc/architecture.jpg)
+<p align="center">
+<img src=doc/architecture.jpg alt="drawing" width="500"/>
+</p>
 
 
 ### Sample results on [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/) and [12scenes](http://graphics.stanford.edu/projects/reloc/)
