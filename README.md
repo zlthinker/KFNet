@@ -59,16 +59,20 @@ python KFNet/eval.py --input_folder <input_folder> --output_folder <output_folde
 * Train SCoordNet
 ```
 git checkout SCoordnet
-python SCoordnet/train.py --input_folder <input_folder> --model_folder <model_folder> --scene <scene>
+python SCoordnet/train.py --input_folder <input_folder> --model_folder <scoordnet_model_folder> --scene <scene>
 ```
 
 * Train OFlowNet
 ```
 git checkout OFlowNet
-python OFlowNet/train.py --input_folder <input_folder> --model_folder <model_folder>
+python OFlowNet/train.py --input_folder <input_folder> --model_folder <oflownet_model_folder>
 ```
 
 * Train KFNet
+```
+git checkout KFNet
+python KFNet/train.py --input_folder <input_folder> --model_folder <model_folder> --scoordnet <scoordnet_model_folder> --oflownet <oflownet_model_folder> --scene <scene>
+```
 
 
 

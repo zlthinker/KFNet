@@ -43,10 +43,10 @@ tf.app.flags.DEFINE_float('momentum', 0.9,
 tf.app.flags.DEFINE_string('input_folder', '', """Path to data.""")
 tf.app.flags.DEFINE_string('model_folder', '', """Path to model.""")
 tf.app.flags.DEFINE_string('output_folder', '', """Path to output.""")
-tf.app.flags.DEFINE_string('flownet', '', """Path to flownet model.""")
-tf.app.flags.DEFINE_string('scorenet', '', """Path to scorenet model.""")
+tf.app.flags.DEFINE_string('oflownet', '', """Path to OFlowNet model.""")
+tf.app.flags.DEFINE_string('scoordnet', '', """Path to SCoordNet model.""")
 
-def get_7scene_transform(transform_file = None):
+def get_transform(transform_file = None):
     if transform_file:
         transform = np.loadtxt(transform_file, dtype=np.float32)
         transform = np.linalg.inv(transform)
@@ -192,11 +192,11 @@ def data_augmentation(image, coord_map, image_pixel_map, spec):
 
     return image_crop, coord_map_crop, pixel_map_crop
 
-def get_training_data(image_list, label_list, spec):
+def get_training_data(image_list, label_list, spec, is_training):
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
 
-    groups = get_indexes(False)
+    groups = get_indexes(is_training)
     indexes = [str(i) for i in range(len(groups))]
     groups = tf.stack(groups, axis=0, name='group_indexes')
 
@@ -240,13 +240,13 @@ def get_training_data(image_list, label_list, spec):
 
 def KF_fusion(image_list, label_list, transform, last_coord, last_uncertainty, spec):
     images, gt_coords, masks, group_indexes = \
-        get_training_data(image_list, label_list, spec)
+        get_training_data(image_list, label_list, spec, False)
 
     sfmnet = KFNet(images, spec, train_scoordnet=False, train_oflownet=False)
 
     measure_coord, measure_uncertainty = sfmnet.GetMeasureCoord2()
     temp_coord, temp_uncertainty, KF_coord, KF_uncertainty = \
-        sfmnet.GetKFCoord(last_coord, last_uncertainty)
+        sfmnet.GetKFCoordRecursive(last_coord, last_uncertainty)
     NIS = sfmnet.GetNIS(measure_coord, measure_uncertainty, temp_coord, temp_uncertainty)   # 1xHxWx3
 
     measure_loss, measure_accuracy = sfmnet.CoordLossWithUncertainty(measure_coord, measure_uncertainty, gt_coords,
@@ -265,24 +265,23 @@ def KF_fusion(image_list, label_list, transform, last_coord, last_uncertainty, s
            measure_loss, measure_accuracy, temp_loss, temp_accuracy, KF_loss, KF_accuracy, \
            gt_coords_8, masks_8
 
-def run(image_list, label_list, pose_file, spec, is_training=True):
+def run(image_list, label_list, transform_file, spec, is_training=True):
     with tf.name_scope('data'):
-        images, gt_coords, masks, pixel_maps, poses, group_indexes = \
-            get_training_data(image_list, label_list, pose_file, spec, is_training)
+        images, gt_coords, masks, group_indexes = \
+            get_training_data(image_list, label_list, spec, is_training)
 
     with tf.device('/device:CPU:0'):
         resize_images = tf.image.resize_nearest_neighbor(images, [spec.image_size[0] // 8, spec.image_size[1] // 8])
         gt_coords = tf.image.resize_nearest_neighbor(gt_coords, [spec.image_size[0] // 8, spec.image_size[1] // 8])
         masks = tf.image.resize_nearest_neighbor(masks, [spec.image_size[0] // 8, spec.image_size[1] // 8])
         masks = tf.cast(tf.equal(masks, 1.0), tf.float32)
-        pixel_maps = tf.image.resize_nearest_neighbor(pixel_maps, [spec.image_size[0] // 8, spec.image_size[1] // 8])
 
-    transform = get_7scene_transform()
+    transform = get_transform(transform_file)
     gt_coords = ApplyTransform(gt_coords, transform, inverse=True)
 
-    kfnet = KFNet(images, gt_coords, spec.focal_x, spec.focal_y, spec.u, spec.v,
-                    train_scorenet=is_training, train_temporal=is_training and not FLAGS.fix_flownet,
-                    reuse=tf.AUTO_REUSE)
+    kfnet = KFNet(images, spec, train_scoordnet=is_training,
+                  train_oflownet=is_training and not FLAGS.fix_flownet,
+                  reuse=tf.AUTO_REUSE)
 
     with tf.name_scope('loss'):
         measure_coord_loss, measure_coord_accuracy = kfnet.MeasureCoordLoss(gt_coords, masks,
@@ -346,12 +345,12 @@ def set_stepvalue():
     else:
         print 'Invalid scene:', FLAGS.scene
         exit()
-    if FLAGS.scorenet != '' and FLAGS.flownet != '':
+    if FLAGS.scoordnet != '' and FLAGS.oflownet != '':
         print 'Reset step to zero for retraining.'
         FLAGS.reset_step = FLAGS.stepvalue * 4
     FLAGS.max_steps = FLAGS.stepvalue * 5
 
-def train(image_list, label_list, pose_file, out_dir, \
+def train(image_list, label_list, transform_file, out_dir, \
           snapshot=None, step=0, debug=False, gpu=0):
 
     print image_list
@@ -375,7 +374,7 @@ def train(image_list, label_list, pose_file, out_dir, \
 
     with tf.device('/device:GPU:%d' % gpu):
         _, loss, measure_loss, measure_accuracy, temp_loss, temp_accuracy, KF_loss, KF_accuracy, group_indexes, _, masks \
-            = run(image_list, label_list, pose_file, spec)
+            = run(image_list, label_list, transform_file, spec)
         optimizer, lr_op, reg_loss = solver(loss)
         init_op = tf.global_variables_initializer()
         global_step = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="global_step")[0]
@@ -401,11 +400,11 @@ def train(image_list, label_list, pose_file, out_dir, \
         else:
             sess.run(init_op)
 
-        if FLAGS.scorenet != '':
-            snapshot, _ = get_snapshot(FLAGS.scorenet)
+        if FLAGS.scoordnet != '':
+            snapshot, _ = get_snapshot(FLAGS.scoordnet)
             RestoreFromScope(sess, snapshot, 'ScoreNet')
-        if FLAGS.flownet != '':
-            snapshot, _ = get_snapshot(FLAGS.flownet)
+        if FLAGS.oflownet != '':
+            snapshot, _ = get_snapshot(FLAGS.oflownet)
             RestoreFromScope(sess, snapshot, 'Temporal')
 
         sess.run(init_step)
@@ -446,9 +445,9 @@ def main(_):
 
     image_list = os.path.join(FLAGS.input_folder, 'image_list.txt')
     label_list = os.path.join(FLAGS.input_folder, 'label_list.txt')
-    pose_file = os.path.join(FLAGS.input_folder, 'poses.bin')
+    transform_file = os.path.join(FLAGS.input_folder, 'transform.txt')
 
-    train(image_list, label_list, pose_file, FLAGS.model_folder,
+    train(image_list, label_list, transform_file, FLAGS.model_folder,
           snapshot, step, FLAGS.debug, FLAGS.gpu)
 
 

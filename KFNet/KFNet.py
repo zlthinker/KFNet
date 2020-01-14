@@ -82,7 +82,7 @@ class KFNet():
     def GetMeasureCoord(self):
         return self.scoordnet.GetOutput()
 
-    def GetKFCoord(self, last_coord, last_uncertainty):
+    def GetKFCoordRecursive(self, last_coord, last_uncertainty):
         """
         Get coordinate map from kalman filter
         :param last_coord: 1xHxWx3
@@ -96,6 +96,52 @@ class KFNet():
 
         temp_coord, temp_uncertainty = self.BuildOFlowNet(feat_map1, feat_map2, last_coord, last_uncertainty)
         KF_coord, KF_uncertainty = self.BuildKFCoord(temp_coord, temp_uncertainty, measure_coord, measure_uncertainty)
+
+        return temp_coord, temp_uncertainty, KF_coord, KF_uncertainty
+
+    def GetKFCoordBatch(self):
+        """
+        Get coordinate map from kalman filter
+        :return: HxWx3
+        """
+        pred_coord_map, pred_uncertainty_map = self.GetMeasureCoord()
+        measure_coord1 = tf.slice(pred_coord_map, [0, 0, 0, 0], [1, -1, -1, -1])
+        measure_coord2 = tf.slice(pred_coord_map, [1, 0, 0, 0], [1, -1, -1, -1])
+        measure_coord3 = tf.slice(pred_coord_map, [2, 0, 0, 0], [1, -1, -1, -1])
+        measure_coord4 = tf.slice(pred_coord_map, [3, 0, 0, 0], [1, -1, -1, -1])
+        measure_uncertainty1 = tf.slice(pred_uncertainty_map, [0, 0, 0, 0], [1, -1, -1, -1])
+        measure_uncertainty2 = tf.slice(pred_uncertainty_map, [1, 0, 0, 0], [1, -1, -1, -1])
+        measure_uncertainty3 = tf.slice(pred_uncertainty_map, [2, 0, 0, 0], [1, -1, -1, -1])
+        measure_uncertainty4 = tf.slice(pred_uncertainty_map, [3, 0, 0, 0], [1, -1, -1, -1])
+
+        feat_map1 = tf.slice(self.temp_feat_maps, [0, 0, 0, 0], [1, -1, -1, -1])
+        feat_map2 = tf.slice(self.temp_feat_maps, [1, 0, 0, 0], [1, -1, -1, -1])
+        feat_map3 = tf.slice(self.temp_feat_maps, [2, 0, 0, 0], [1, -1, -1, -1])
+        feat_map4 = tf.slice(self.temp_feat_maps, [3, 0, 0, 0], [1, -1, -1, -1])
+
+        # frame1
+        KF_coord1 = measure_coord1
+        KF_uncertainty1 = measure_uncertainty1
+        temp_coord1 = measure_coord1
+        temp_uncertainty1 = measure_uncertainty1
+
+        # frame2
+        temp_coord2, temp_uncertainty2 = self.BuildOFlowNet(feat_map1, feat_map2, KF_coord1, KF_uncertainty1)
+        KF_coord2, KF_uncertainty2 = self.BuildKFCoord(temp_coord2, temp_uncertainty2, measure_coord2, measure_uncertainty2)
+
+        # frame3
+        temp_coord3, temp_uncertainty3 = self.BuildOFlowNet(feat_map2, feat_map3, KF_coord2, KF_uncertainty2)
+        KF_coord3, KF_uncertainty3 = self.BuildKFCoord(temp_coord3, temp_uncertainty3, measure_coord3, measure_uncertainty3)
+
+        # frame4
+        temp_coord4, temp_uncertainty4 = self.BuildOFlowNet(feat_map3, feat_map4, KF_coord3, KF_uncertainty3)
+        KF_coord4, KF_uncertainty4 = self.BuildKFCoord(temp_coord4, temp_uncertainty4, measure_coord4, measure_uncertainty4)
+
+        temp_coord = tf.concat([temp_coord1, temp_coord2, temp_coord3, temp_coord4], axis=0)
+        temp_uncertainty = tf.concat([temp_uncertainty1, temp_uncertainty2, temp_uncertainty3, temp_uncertainty4], axis=0)
+
+        KF_coord = tf.concat([KF_coord1, KF_coord2, KF_coord3, KF_coord4], axis=0)
+        KF_uncertainty = tf.concat([KF_uncertainty1, KF_uncertainty2, KF_uncertainty3, KF_uncertainty4], axis=0)
 
         return temp_coord, temp_uncertainty, KF_coord, KF_uncertainty
 
@@ -144,7 +190,7 @@ class KFNet():
         return None
 
     def CoordLossWithUncertainty(self, pred_coord_map, uncertainty_map, gt_coord_map,
-                                 mask=None, dist_threshold=0.05, transform=True, downsample=None):
+                                 mask=None, dist_threshold=0.05, transform=None, downsample=None):
         """
         loss = t + (x-mean)^2 / 2 exp(2t)
         :param pred_coord_map: BxHxWxC
@@ -214,7 +260,7 @@ class KFNet():
         :param transform: 4x4 Transform applied to predicetd coordinates
         :return:
         """
-        temp_coord_map, temp_uncertainty_map, _, _ = self.GetKFCoord()
+        temp_coord_map, temp_uncertainty_map, _, _ = self.GetKFCoordBatch()
 
         if transform is not None:
             temp_coord_map = ApplyTransform(temp_coord_map, transform)
@@ -238,7 +284,7 @@ class KFNet():
         :param transform: 4x4 Transform applied to predicetd coordinates
         :return:
         """
-        _, _, KF_coord_map, KF_uncertainty_map = self.GetKFCoord()
+        _, _, KF_coord_map, KF_uncertainty_map = self.GetKFCoordBatch()
         if transform is not None:
             KF_coord_map = ApplyTransform(KF_coord_map, transform)
         loss, accuracy = self.CoordLossWithUncertainty(KF_coord_map, KF_uncertainty_map, gt_coords, mask)
