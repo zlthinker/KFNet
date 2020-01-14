@@ -4,6 +4,8 @@ This is a Tensorflow implementation of "Learning Temporal Camera Relocalization 
 
 ## About
 
+![Alt Text](doc/architecture.jpg)
+
 
 || DSAC++ | KFNet |
 |:--:|:--:|:--:|
