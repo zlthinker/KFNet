@@ -45,7 +45,7 @@ The codes are tested along with
 
 * Download
 
-You can download the models of [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/) from the [Google drive link](https://drive.google.com/open?id=13KZGz_akJw8iTQW90pgbuw2JAQzV7cG8).
+You can download the trained models of [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/) from the [Google drive link](https://drive.google.com/open?id=13KZGz_akJw8iTQW90pgbuw2JAQzV7cG8).
 
 * Test SCoordNet
 ```
