@@ -43,29 +43,8 @@ def get_transform(transform_file = None):
                               [0.0, 0.0, 0.0, 1.0]])
     return tf.constant(transform)
 
-def get_indexes(num, is_training):
-    indexes = []
-    blind_indexes = []
-    if FLAGS.scene == 'chess':
-        indexes = range(num)
-        blind_indexes = range(2924, 2944)
-    elif FLAGS.scene == 'fire':
-        indexes = range(num)
-    elif FLAGS.scene == 'heads':
-        indexes = range(num)
-    elif FLAGS.scene == 'office':
-        indexes = range(num)
-    elif FLAGS.scene == 'pumpkin':
-        indexes = range(num)
-    elif FLAGS.scene == 'redkitchen':
-        indexes = range(num)
-    elif FLAGS.scene == 'stairs':
-        indexes = range(num)
-    else:
-        print 'Invalid scene:', FLAGS.scene
-        exit()
-    indexes = [i for i in indexes if i not in blind_indexes]
-    return indexes
+def get_indexes(num):
+    return range(num)
 
 def softmax_pooling(input_tensor):
     """
@@ -269,7 +248,7 @@ def get_training_data(image_list, label_list, spec):
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
 
-    indexes = get_indexes(len(image_paths), True)
+    indexes = get_indexes(len(image_paths))
     indexes = [str(i) for i in indexes]
     return _training_data_queue(indexes, image_paths, label_paths, spec)
 

@@ -51,7 +51,7 @@ def eval(image_list, label_list, transform_file, output_folder, snapshot, debug=
         spec.image_size = (480, 864)
         spec.crop_size = (480, 864)
 
-    indexes = get_indexes(image_num, False)
+    indexes = get_indexes(image_num)
     print indexes
     scoordnet, images, coords, uncertainty, gt_coords, mask, image_indexes = \
         run_testing(indexes, image_list, label_list, transform_file, spec)
