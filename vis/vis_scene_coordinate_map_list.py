@@ -48,7 +48,6 @@ def main():
 
     for i in range(0, len(npy_files), args.step):
         npy_file = npy_files[i]
-        print npy_file
         pcd = read_npy_as_pcd(npy_file, args.thres)
         pcd.transform(rotation)
 
