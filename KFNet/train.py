@@ -335,11 +335,11 @@ def set_stepvalue():
     elif FLAGS.scene == 'heads':
         FLAGS.stepvalue = 60000
     elif FLAGS.scene == 'office':
-        FLAGS.stepvalue = 140000
+        FLAGS.stepvalue = 100000
     elif FLAGS.scene == 'pumpkin':
-        FLAGS.stepvalue = 140000
+        FLAGS.stepvalue = 100000
     elif FLAGS.scene == 'redkitchen':
-        FLAGS.stepvalue = 140000
+        FLAGS.stepvalue = 100000
     elif FLAGS.scene == 'stairs':
         FLAGS.stepvalue = 100000
     else:

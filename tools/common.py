@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-"""
-Copyright 2017, Zixin Luo, HKUST.
-Commonly used functions
-"""
-
 from __future__ import print_function
 
 import os

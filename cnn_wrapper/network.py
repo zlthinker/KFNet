@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-"""
-Copyright 2017, Zixin Luo, HKUST.
-CNN layer wrapper.
-"""
-
 import numpy as np
 import tensorflow as tf
 
