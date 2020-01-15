@@ -50,27 +50,29 @@ python SCoordnet/eval.py --input_folder <input_folder> --output_folder <output_f
 
 * Test KFNet
 ```
-git checkout KFNet
+git checkout master
 python KFNet/eval.py --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder> --scene <scene>
 ```
 
 ### Training
 
-1. Train SCoordNet
+The traing procedure has 3 stages. 
+
+1. **Train SCoordNet** for each scene independently.
 ```
 git checkout SCoordnet
 python SCoordnet/train.py --input_folder <input_folder> --model_folder <scoordnet_model_folder> --scene <scene>
 ```
 
-2. Train OFlowNet
+2. **Train OFlowNet** using general image sequences that are not limited to any specific scenes.
 ```
 git checkout OFlowNet
 python OFlowNet/train.py --input_folder <input_folder> --model_folder <oflownet_model_folder>
 ```
 
-3. Train KFNet
+3. **Train KFNet** from the pre-trained SCoordNet and OFlowNet models to jointly finetune their parameters.
 ```
-git checkout KFNet
+git checkout master
 python KFNet/train.py --input_folder <input_folder> --model_folder <model_folder> --scoordnet <scoordnet_model_folder> --oflownet <oflownet_model_folder> --scene <scene>
 ```
 
