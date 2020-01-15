@@ -7,13 +7,8 @@ def read_lines(filepath):
     lines = [line.strip() for line in lines]
     return lines
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('npy_file', type=str, help="Input scene coordinate map in npy format")
-    parser.add_argument('--thres', default='20', type=float, help="Confidence threshold")
-    args = parser.parse_args()
-
-    map = np.load(args.npy_file)
+def read_npy_as_pcd(npy_file, thres):
+    map = np.load(npy_file)
     coords = map[:, :, 0:3]
     confidences = map[:, :, 3]
     coords = np.reshape(coords, (-1, 3))
@@ -21,13 +16,22 @@ def main():
 
     coords_filtered = []
     for i in range(len(confidences)):
-        if confidences[i] > args.thres:
+        if confidences[i] > thres:
             coords_filtered.append(coords[i])
     coords_filtered = np.vstack(coords_filtered)
-    print '#points:', coords_filtered.shape[0]
+    print 'Load #points:', coords_filtered.shape[0], ' from', npy_file
 
     pcd = open3d.geometry.PointCloud()
     pcd.points = open3d.utility.Vector3dVector(coords_filtered)
+    return pcd
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('npy_file', type=str, help="Input scene coordinate map in npy format")
+    parser.add_argument('--thres', default='20', type=float, help="Confidence threshold")
+    args = parser.parse_args()
+
+    pcd = read_npy_as_pcd(args.npy_file, args.thres)
     open3d.visualization.draw_geometries([pcd])
 
 if __name__ == "__main__":
