@@ -43,10 +43,14 @@ The codes are tested along with
 
 ### Testing
 
+* Download
+
+You can download the models of [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/) from the [Google drive link](https://drive.google.com/open?id=13KZGz_akJw8iTQW90pgbuw2JAQzV7cG8).
+
 * Test SCoordNet
 ```
 git checkout SCoordNet
-python SCoordnet/eval.py --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder> --scene <scene>
+python SCoordnet/eval.py --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder>
 # <scene> = chess/fire/heads/office/pumpkin/redkitchen/stairs, i.e., one of the scene names of 7scenes dataset
 ```
 
