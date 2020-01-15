@@ -56,7 +56,7 @@ python KFNet/eval.py --input_folder <input_folder> --output_folder <output_folde
 
 ### Training
 
-The traing procedure has 3 stages. 
+The training procedure has 3 stages. 
 
 1. **Train SCoordNet** for each scene independently.
 ```
@@ -70,7 +70,7 @@ git checkout OFlowNet
 python OFlowNet/train.py --input_folder <input_folder> --model_folder <oflownet_model_folder>
 ```
 
-3. **Train KFNet** from the pre-trained SCoordNet and OFlowNet models to jointly finetune their parameters.
+3. **Train KFNet** for each scene from the pre-trained SCoordNet and OFlowNet models to jointly finetune their parameters.
 ```
 git checkout master
 python KFNet/train.py --input_folder <input_folder> --model_folder <model_folder> --scoordnet <scoordnet_model_folder> --oflownet <oflownet_model_folder> --scene <scene>
