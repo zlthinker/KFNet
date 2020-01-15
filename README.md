@@ -7,7 +7,7 @@ This is a Tensorflow implementation of "Learning Temporal Camera Relocalization 
 ### Network architecture
 
 <p align="center">
-<img src=doc/architecture.jpg alt="drawing" width="800"/>
+<img src=doc/architecture.jpg alt="drawing" width="700"/>
 </p>
 
 
