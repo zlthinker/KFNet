@@ -44,7 +44,7 @@ tf.app.flags.DEFINE_string('finetune_folder', '', """Path to output.""")
 tf.app.flags.DEFINE_string('oflownet', '', """Path to OFlowNet model.""")
 tf.app.flags.DEFINE_string('scoordnet', '', """Path to SCoordNet model.""")
 
-def get_groups(image_num):
+def get_indexes(image_num):
     def _get_group_from_range(start, end):
         group = []
         for i in range(start, end - 1):
@@ -85,7 +85,7 @@ def get_training_data(image_list, label_list, spec, is_training=True):
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
 
-    groups = get_groups(len(image_paths))
+    groups = get_indexes(len(image_paths))
     indexes = [str(i) for i in range(len(groups))]
     groups = tf.stack(groups, axis=0, name='group_indexes')
 
