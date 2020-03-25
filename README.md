@@ -1,5 +1,7 @@
 # KFNet
-This is a Tensorflow implementation of the CVPR 2020 Oral paper - "KFNet: Learning Temporal Camera Relocalization using Kalman Filtering".
+This is a Tensorflow implementation of our CVPR 2020 Oral paper - ["KFNet: Learning Temporal Camera Relocalization using Kalman Filtering"](https://arxiv.org/abs/2003.10629) by Lei Zhou, Zixin Luo, Tianwei Shen, Jiahui Zhang, Mingmin Zhen, Yao Yao, Tian Fang, Long Quan.
+
+This paper addresses the temporal camera relocalization of time-series image data by folding the scene coordinate regression problem into the principled Kalman filter framework.
 
 
 ## About
