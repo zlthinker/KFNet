@@ -29,10 +29,10 @@ As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet)
 
 |Dataset | Description | Optical flow |
 |:--:|:--:|:--:|
-|7scenes-fire | Indoor; small shaky motions | ![Alt Text](doc/fire_flow.gif) |
-|12scenes-office2-5a | Indoor; larger movements | ![Alt Text](doc/office2_5a_flow.gif) |
-|Cambridge-KingsCollege | Outdoor; large random motions | ![Alt Text](doc/KingsCollege_flow.gif) |
-|DeepLoc | Outdoor; forward motions | ![Alt Text](doc/DeepLoc_flow.gif) |
+|7scenes-fire | Indoor; small shaky motions | <img src="doc/fire_flow.gif" width="375"> | 
+|12scenes-office2-5a | Indoor; larger movements | <img src="doc/office2_5a_flow.gif" width="375"> |
+|Cambridge-KingsCollege | Outdoor; large random motions | <img src="doc/KingsCollege_flow.gif" width="375"> |
+|DeepLoc | Outdoor; forward motions.\\ Since OFlowNet is trained only on one scene of DeepLoc, the predictions on the right appear somewhat messy due to the lack of training data. Training with a larger amount and variety of data would improve the results. | <img src="doc/DeepLoc_flow.gif" width="375"> |
 
 ## Usage
 
