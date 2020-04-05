@@ -27,14 +27,14 @@ KFNet simultaneously predicts the mapping points and camera poses in a temporal 
 
 As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet) delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grouptruth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
 
-* **Remark** For DeepLoc, since OFlowNet is trained only on one scene included in DeepLoc, the flow predictions appear somewhat messy due to the lack of training data. Training with a larger amount and variety of data would improve the results. 
-
 |Dataset | Description | Optical flow |
 |:--:|:--:|:--:|
 |7scenes-fire | Indoor; hand-held; small shaky motions | <img src="doc/fire_flow.gif" width="375"> | 
 |12scenes-office2-5a | Indoor; hand-held; larger movements | <img src="doc/office2_5a_flow.gif" width="375"> |
 |Cambridge-KingsCollege | Outdoor; hand-held; large random motions | <img src="doc/KingsCollege_flow.gif" width="375"> |
 |DeepLoc | Outdoor; vehicle-mounted; forward motions | <img src="doc/DeepLoc_flow.gif" width="375"> |
+
+**Remark** For DeepLoc, since OFlowNet is trained only on one scene included in DeepLoc, the flow predictions appear somewhat messy due to the lack of training data. Training with a larger amount and variety of data would improve the results. 
 
 
 ## Usage
