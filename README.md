@@ -61,6 +61,7 @@ As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet)
 The codes are tested along with 
 * python 2.7,
 * tensorflow-gpu 1.12.
+Run ```sudo pip install -r requirements.txt``` to install tensorflow and other necessary python packages.
 
 ### Testing
 
