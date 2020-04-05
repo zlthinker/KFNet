@@ -25,13 +25,13 @@ KFNet simultaneously predicts the mapping points and camera poses in a temporal 
 
 ### Intermediate optical flow results on [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/), [12scenes](http://graphics.stanford.edu/projects/reloc/), [Cambridge](http://mi.eng.cam.ac.uk/projects/relocalisation/) and [DeepLoc](http://deeploc.cs.uni-freiburg.de/)
 
-As an essential component of KFNet, the process system of KFNet delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grouptruth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
+As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet) delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grouptruth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
 
 |Dataset | Description | Optical flow |
 |:--:|:--:|:--:|
 |7scenes-fire | Indoor; small shaky motions | ![Alt Text](doc/fire_flow.gif) |
 |12scenes-office2-5a | Indoor; larger movements | ![Alt Text](doc/office2_5a_flow.gif) |
-|Cambridge-KingsCollege | Outdoor; very large motions | ![Alt Text](doc/KingsCollege_flow.gif) |
+|Cambridge-KingsCollege | Outdoor; large random motions | ![Alt Text](doc/KingsCollege_flow.gif) |
 |DeepLoc | Outdoor; forward motions | ![Alt Text](doc/DeepLoc_flow.gif) |
 
 ## Usage
