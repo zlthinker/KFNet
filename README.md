@@ -92,7 +92,7 @@ git checkout SCoordnet
 python SCoordnet/train.py --input_folder <input_folder> --model_folder <scoordnet_model_folder> --scene <scene>
 ```
 
-2. **Train OFlowNet** using general image sequences that are not limited to any specific scenes.
+2. **Train OFlowNet** using all the image sequences that are not limited to any specific scenes, for example, concatenating all the ```image_list.txt``` and ```label_list.txt``` of 7scenes for training.
 ```
 git checkout OFlowNet
 python OFlowNet/train.py --input_folder <input_folder> --model_folder <oflownet_model_folder>
