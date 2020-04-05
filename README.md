@@ -31,10 +31,10 @@ As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet)
 
 |Dataset | Description | Optical flow |
 |:--:|:--:|:--:|
-|7scenes-fire | Indoor; small shaky motions | <img src="doc/fire_flow.gif" width="375"> | 
-|12scenes-office2-5a | Indoor; larger movements | <img src="doc/office2_5a_flow.gif" width="375"> |
-|Cambridge-KingsCollege | Outdoor; large random motions | <img src="doc/KingsCollege_flow.gif" width="375"> |
-|DeepLoc | Outdoor; forward motions. | <img src="doc/DeepLoc_flow.gif" width="375"> |
+|7scenes-fire | Indoor; hand-held; small shaky motions | <img src="doc/fire_flow.gif" width="375"> | 
+|12scenes-office2-5a | Indoor; hand-held; larger movements | <img src="doc/office2_5a_flow.gif" width="375"> |
+|Cambridge-KingsCollege | Outdoor; hand-held; large random motions | <img src="doc/KingsCollege_flow.gif" width="375"> |
+|DeepLoc | Outdoor; vehicle-mounted; forward motions | <img src="doc/DeepLoc_flow.gif" width="375"> |
 
 
 ## Usage
