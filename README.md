@@ -89,7 +89,7 @@ The training procedure has 3 stages.
 1. **Train SCoordNet** for each scene independently.
 ```
 git checkout SCoordnet
-python SCoordnet/train.py --input_folder <input_folder> --model_folder <scoordnet_model_folder> --scene <scene>
+python SCoordNet/train.py --input_folder <input_folder> --model_folder <scoordnet_model_folder> --scene <scene>
 ```
 
 2. **Train OFlowNet** using all the image sequences that are not limited to any specific scenes, for example, concatenating all the ```image_list.txt``` and ```label_list.txt``` of 7scenes for training.
