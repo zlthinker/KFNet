@@ -183,7 +183,7 @@ def run(image_list, label_list, spec, is_training=True):
         temp_coord_loss, temp_coord_accuracy, temp_prob = kfnet.TemporalCoordLoss(gt_coords, shift_masks)
 
         images = tf.image.resize_bilinear(images, [spec.image_size[0] // 8, spec.image_size[1] // 8])
-        temp_coord_map, temp_uncertainty_map, temp_images = kfnet.GetTemporalCoord()
+        temp_coord_map, temp_uncertainty_map, temp_images, _ = kfnet.GetTemporalCoord()
         image_loss = 2.0 * PhotometricLoss(images, temp_images, masks)
 
         smooth_loss = 50 * kfnet.SmoothLoss(temp_coord_map, images, shift_masks)
@@ -196,7 +196,7 @@ def run(image_list, label_list, spec, is_training=True):
             tf.summary.scalar('temp_accuracy', temp_coord_accuracy)
 
     return kfnet, loss, measure_coord_loss, measure_coord_accuracy, temp_coord_loss, temp_coord_accuracy, smooth_loss, \
-           image_loss, group_indexes, gt_coords * shift_masks, shift_masks, stddev, temp_images
+           image_loss, group_indexes, gt_coords * shift_masks, shift_masks, stddev
 
 def solver(loss):
     weights_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)

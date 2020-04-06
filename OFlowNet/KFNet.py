@@ -118,15 +118,17 @@ class KFNet():
         uncertainty1 = tf.slice(self.gt_uncertainty, [0, 0, 0, 0], [1, -1, -1, -1])  # 1xHxWx3
         uncertainty2 = tf.slice(self.gt_uncertainty, [1, 0, 0, 0], [1, -1, -1, -1])  # 1xHxWx3
 
-        temp_coord2, temp_uncertainty2, pixel_map2 = self.BuildOFlowNet(feat_map1, feat_map2, coord_map1, uncertainty1)
-        temp_coord1, temp_uncertainty1, pixel_map1 = self.BuildOFlowNet(feat_map2, feat_map1, coord_map2, uncertainty2)
+        temp_coord2, temp_uncertainty2, pixel_map2, optical_flow2 = self.BuildOFlowNet(feat_map1, feat_map2, coord_map1, uncertainty1)
+        temp_coord1, temp_uncertainty1, pixel_map1, optical_flow1 = self.BuildOFlowNet(feat_map2, feat_map1, coord_map2, uncertainty2)
         temp_coord = tf.concat([temp_coord1, temp_coord2], axis=0)
         temp_uncertainty = tf.concat([temp_uncertainty1, temp_uncertainty2], axis=0)
 
         temp_image1 = bilinear_sampler(image2, pixel_map1)    # BxHxWx3
         temp_image2 = bilinear_sampler(image1, pixel_map2)  # BxHxWx3
         temp_image = tf.concat([temp_image1, temp_image2], axis=0)
-        return temp_coord, temp_uncertainty, temp_image
+
+        optical_flows = tf.concat([optical_flow1, optical_flow2], axis=0)
+        return temp_coord, temp_uncertainty, temp_image, optical_flows
 
     ####################### eof I/O #######################
 
@@ -280,7 +282,7 @@ class KFNet():
         temp_variance = transition_variance + last_variance
         temp_uncertainty = tf.sqrt(temp_variance, name='temp_uncertainty')
 
-        return temp_coord, temp_uncertainty, pixel_map
+        return temp_coord, temp_uncertainty, pixel_map, flow
 
 
 

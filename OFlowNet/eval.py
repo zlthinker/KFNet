@@ -26,11 +26,11 @@ def eval(image_list, label_list, snapshot, out_dir):
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
 
-    kfnet, loss, _, _, temp_loss, temp_accuracy, smooth_loss, image_loss, group_indexes, gt_coords, masks, stddev, temp_images \
+    kfnet, loss, _, _, temp_loss, temp_accuracy, smooth_loss, image_loss, group_indexes, gt_coords, masks, stddev \
         = run(image_list, label_list, spec, False)
 
     images = kfnet.GetInputImages()
-    temp_coord_map, temp_uncertainty_map, temp_prob = kfnet.GetTemporalCoord()
+    temp_coord_map, temp_uncertainty_map, temp_images, flow = kfnet.GetTemporalCoord()
     temp_uncertainty_map = 1.0 / temp_uncertainty_map
 
     config = tf.ConfigProto(log_device_placement=False)
@@ -53,9 +53,9 @@ def eval(image_list, label_list, snapshot, out_dir):
         for i in range(len(image_paths)):
             out_images, out_gt_coord, out_masks, out_group_indexes, \
             out_temp_coord, out_temp_uncertainty, \
-            out_temp_loss, out_temp_accuracy, out_temp_prob, out_temp_images = sess.run([images, gt_coords, masks, group_indexes,
-                                                        temp_coord_map, temp_uncertainty_map,
-                                                        temp_loss, temp_accuracy, temp_prob, temp_images])
+            out_temp_loss, out_temp_accuracy, out_temp_prob, out_temp_images, out_flow = \
+            sess.run([images, gt_coords, masks, group_indexes, temp_coord_map, temp_uncertainty_map,
+            temp_loss, temp_accuracy, temp_prob, temp_images, flow])
 
             diff_coord = np.square(out_temp_coord - out_gt_coord)
             diff_coord = np.sum(diff_coord, axis=-1)
@@ -68,35 +68,11 @@ def eval(image_list, label_list, snapshot, out_dir):
 
             format_str = 'step %d, %5d~%5d, l_temp = %.4f, a_temp = %.4f, diff_coord = %.4f'
             print(format_str % (i, out_group_indexes[0], out_group_indexes[1], out_temp_loss, out_temp_accuracy, avg_diff_coord))
-            # continue
-
-            fig, axarr = plt.subplots(5, 2)
-            plt.subplot(5, 2, 1)
-            plt.imshow(out_images[0, :, :, :] / 255.0)
-            plt.subplot(5, 2, 2)
-            plt.imshow(out_images[1, :, :, :] / 255.0)
-            plt.subplot(5, 2, 3)
-            plt.imshow(out_temp_images[0, :, :, :] / 255.0)
-            plt.subplot(5, 2, 4)
-            plt.imshow(out_temp_images[1, :, :, :] / 255.0)
-            # plt.subplot(5, 2, 3)
-            # plt.imshow(out_gt_coord[0, :, :, :])
-            # plt.subplot(5, 2, 4)
-            # plt.imshow(out_gt_coord[1, :, :, :])
-            plt.subplot(5, 2, 5)
-            plt.imshow(out_temp_coord[0, :, :, :])
-            plt.subplot(5, 2, 6)
-            plt.imshow(out_temp_coord[1, :, :, :])
-            plt.subplot(5, 2, 7)
-            plt.imshow(out_temp_uncertainty[0, :, :, 0])
-            plt.subplot(5, 2, 8)
-            plt.imshow(out_temp_uncertainty[1, :, :, 0])
-            plt.subplot(5, 2, 9)
-            plt.imshow(diff_coord[0, :, :])
-            plt.subplot(5, 2, 10)
-            plt.imshow(diff_coord[1, :, :])
-
-            plt.show()
+            
+            flow_save_path = os.path.join(FLAGS.output_folder,
+                                          str(out_group_indexes[0]) + '_' + str(out_group_indexes[1]) + '_flow.npy')
+            flow_and_uncertainty = np.concat((out_flow[0, :, :, :], out_temp_uncertainty[0, :, :, :]), axis=-1)
+            np.save(flow_save_path, flow_and_uncertainty)
 
         print 'Median loss', np.median(losses)
         print 'Median accuracy', np.median(accuracies)
