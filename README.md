@@ -73,7 +73,7 @@ You can download the trained models of [7scenes](https://www.microsoft.com/en-us
 * Test SCoordNet
 ```
 git checkout SCoordNet
-python SCoordnet/eval.py --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder>
+python SCoordnet/eval.py --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder> --scene <scene>
 # <scene> = chess/fire/heads/office/pumpkin/redkitchen/stairs, i.e., one of the scene names of 7scenes dataset
 ```
 
