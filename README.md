@@ -77,6 +77,13 @@ python SCoordnet/eval.py --input_folder <input_folder> --output_folder <output_f
 # <scene> = chess/fire/heads/office/pumpkin/redkitchen/stairs, i.e., one of the scene names of 7scenes dataset
 ```
 
+* Test OFlowNet
+```
+git checkout OFlowNet
+python OFlowNet/eval --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder>
+```
+The testing program of OFlowNet will save the 2-d optical flows and 1-d uncertainties of consecutive image pairs as npy files of the dimension ```60x80x3```. You can visualize the flow results by running scripts ```vis/vis_scene_coordinate_map.py``` and ```vis/vis_scene_coordinate_map_list.py```.
+
 * Test KFNet
 ```
 git checkout master
