@@ -72,7 +72,6 @@ def eval(image_list, label_list, snapshot, out_dir):
             
             flow_save_path = os.path.join(FLAGS.output_folder,
                                           str(out_group_indexes[0]) + '_' + str(out_group_indexes[1]) + '_flow.npy')
-            out_flow = out_flow * kfnet.flow_sample_rate
             flow_and_uncertainty = np.concatenate((out_flow[0, :, :, :], out_temp_uncertainty[0, :, :, :]), axis=-1)
             np.save(flow_save_path, flow_and_uncertainty)
 
