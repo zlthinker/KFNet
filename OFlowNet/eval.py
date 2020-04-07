@@ -3,7 +3,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from tensorflow.python import debug as tf_debug
 from KFNet import *
 from tools.io import read_lines, get_snapshot
-from train import FLAGS, run, RestoreFromScope
+from train import FLAGS, run, RestoreFromScope, get_indexes
 import matplotlib.pyplot as plt
 
 def eval(image_list, label_list, snapshot, out_dir):
@@ -25,6 +25,7 @@ def eval(image_list, label_list, snapshot, out_dir):
 
     image_paths = read_lines(image_list)
     label_paths = read_lines(label_list)
+    groups = get_indexes(len(image_paths))
 
     kfnet, loss, _, _, temp_loss, temp_accuracy, smooth_loss, image_loss, group_indexes, gt_coords, masks, stddev \
         = run(image_list, label_list, spec, False)
@@ -50,12 +51,12 @@ def eval(image_list, label_list, snapshot, out_dir):
         losses = []
         accuracies = []
         diff_coords = []
-        for i in range(len(image_paths)):
+        for i in range(len(groups)):
             out_images, out_gt_coord, out_masks, out_group_indexes, \
             out_temp_coord, out_temp_uncertainty, \
-            out_temp_loss, out_temp_accuracy, out_temp_prob, out_temp_images, out_flow = \
+            out_temp_loss, out_temp_accuracy, out_temp_images, out_flow = \
             sess.run([images, gt_coords, masks, group_indexes, temp_coord_map, temp_uncertainty_map,
-            temp_loss, temp_accuracy, temp_prob, temp_images, flow])
+            temp_loss, temp_accuracy, temp_images, flow])
 
             diff_coord = np.square(out_temp_coord - out_gt_coord)
             diff_coord = np.sum(diff_coord, axis=-1)
@@ -71,7 +72,8 @@ def eval(image_list, label_list, snapshot, out_dir):
             
             flow_save_path = os.path.join(FLAGS.output_folder,
                                           str(out_group_indexes[0]) + '_' + str(out_group_indexes[1]) + '_flow.npy')
-            flow_and_uncertainty = np.concat((out_flow[0, :, :, :], out_temp_uncertainty[0, :, :, :]), axis=-1)
+            out_flow = out_flow * kfnet.flow_sample_rate
+            flow_and_uncertainty = np.concatenate((out_flow[0, :, :, :], out_temp_uncertainty[0, :, :, :]), axis=-1)
             np.save(flow_save_path, flow_and_uncertainty)
 
         print 'Median loss', np.median(losses)

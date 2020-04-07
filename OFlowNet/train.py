@@ -180,7 +180,7 @@ def run(image_list, label_list, spec, is_training=True):
 
     with tf.name_scope('loss'):
         measure_coord_loss, measure_coord_accuracy = kfnet.CoordLossWithUncertainty(noise_gt_coords, gt_uncertainty, gt_coords, masks)
-        temp_coord_loss, temp_coord_accuracy, temp_prob = kfnet.TemporalCoordLoss(gt_coords, shift_masks)
+        temp_coord_loss, temp_coord_accuracy = kfnet.TemporalCoordLoss(gt_coords, shift_masks)
 
         images = tf.image.resize_bilinear(images, [spec.image_size[0] // 8, spec.image_size[1] // 8])
         temp_coord_map, temp_uncertainty_map, temp_images, _ = kfnet.GetTemporalCoord()

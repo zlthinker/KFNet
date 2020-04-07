@@ -173,14 +173,14 @@ class KFNet():
         :param transform: 4x4 Transform applied to predicetd coordinates
         :return:
         """
-        temp_coord_map, temp_uncertainty_map, temp_prob = self.GetTemporalCoord()
+        temp_coord_map, temp_uncertainty_map, _, _ = self.GetTemporalCoord()
 
         if transform is not None:
             temp_coord_map = ApplyTransform(temp_coord_map, transform)
 
         loss, accuracy = self.CoordLossWithUncertainty(temp_coord_map, temp_uncertainty_map, gt_coords, mask)
 
-        return loss, accuracy, temp_prob
+        return loss, accuracy
 
     def SmoothLoss(self, disp, img, mask=None):
         """
