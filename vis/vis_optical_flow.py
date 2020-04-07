@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import flow_vis, argparse, random, cv2
+import argparse, random, cv2
 
 def read_lines(filepath):
     with open(filepath) as fin:
