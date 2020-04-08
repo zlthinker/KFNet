@@ -346,8 +346,8 @@ def set_stepvalue():
         print 'Invalid scene:', FLAGS.scene
         exit()
     if FLAGS.scoordnet != '' and FLAGS.oflownet != '':
-        print 'Reset step to zero for retraining.'
         FLAGS.reset_step = FLAGS.stepvalue * 4
+        print 'Reset step to', FLAGS.reset_step 
     FLAGS.max_steps = FLAGS.stepvalue * 5
 
 def train(image_list, label_list, transform_file, out_dir, \
