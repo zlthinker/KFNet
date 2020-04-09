@@ -58,11 +58,22 @@ As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet)
 
 ### Environment
 
-The codes are tested along with 
-* python 2.7,
-* tensorflow-gpu 1.12.
+* The codes are tested along with 
+	* python 2.7,
+	* tensorflow-gpu 1.10~1.13 (inclusive),
+	* corresponding versions of CUDA and CUDNN to enable tensorflow-gpu (see [link](https://stackoverflow.com/questions/50622525/which-tensorflow-and-cuda-version-combinations-are-compatible) for reference of the version combinations), 
+	* other python packages including numpy, matplotlib and open3d.
 
-Run ```sudo pip install -r requirements.txt``` to install tensorflow and other necessary python packages.
+* To direcly install tensorflow and other python packages, run
+```
+sudo pip install -r requirements.txt
+``` 
+
+* If you are familiar with Conda, you can create the environment for KFNet by running 
+```
+conda env create -f environment.yml
+conda activate KFNet
+```
 
 ### Testing
 
