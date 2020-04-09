@@ -3,6 +3,16 @@ This is a Tensorflow implementation of our CVPR 2020 Oral paper - ["KFNet: Learn
 
 This paper addresses the temporal camera relocalization of time-series image data by folding the scene coordinate regression problem into the principled Kalman filter framework.
 
+If you find this project useful, please cite:
+```
+@inproceedings{zhou2018learning,
+  title={KFNet: Learning Temporal Camera Relocalization using Kalman Filtering},
+  author={Zhou, Lei and Luo, Zixin and Shen, Tianwei and Zhang, Jiahui and Zhen, Mingmin and Yao, Yao and Fang, Tian and Quan, Long},
+  booktitle={Computer Vision and Pattern Recognition (CVPR)},
+  year={2020}
+}
+```
+
 
 ## About
 
