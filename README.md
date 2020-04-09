@@ -81,7 +81,7 @@ sudo pip install -r requirements.txt
 
 * If you are familiar with Conda, you can create the environment for KFNet by running 
 ```
-conda env create -f environment.yml
+conda create -f environment.yml
 conda activate KFNet
 ```
 
