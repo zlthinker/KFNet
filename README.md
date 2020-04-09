@@ -5,7 +5,7 @@ This paper addresses the temporal camera relocalization of time-series image dat
 
 If you find this project useful, please cite:
 ```
-@inproceedings{zhou2018learning,
+@inproceedings{zhou2020kfnet,
   title={KFNet: Learning Temporal Camera Relocalization using Kalman Filtering},
   author={Zhou, Lei and Luo, Zixin and Shen, Tianwei and Zhang, Jiahui and Zhen, Mingmin and Yao, Yao and Fang, Tian and Quan, Long},
   booktitle={Computer Vision and Pattern Recognition (CVPR)},
