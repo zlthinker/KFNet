@@ -35,7 +35,7 @@ KFNet simultaneously predicts the mapping points and camera poses in a temporal 
 
 ### Intermediate optical flow results on [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/), [12scenes](http://graphics.stanford.edu/projects/reloc/), [Cambridge](http://mi.eng.cam.ac.uk/projects/relocalisation/) and [DeepLoc](http://deeploc.cs.uni-freiburg.de/)
 
-As an essential component of KFNet, the processing system of KFNet (i.e., OFlowNet) delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grourd truth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
+As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet) delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grourd truth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
 
 |Dataset | Description | Optical flow |
 |:--:|:--:|:--:|
