@@ -31,11 +31,11 @@ KFNet simultaneously predicts the mapping points and camera poses in a temporal 
 |:--:|:--:|:--:|
 |7scenes-fire       | ![Alt Text](doc/fire_DSAC++_pip.gif)       | ![Alt Text](doc/fire_KFNet_pip.gif)      |
 |12scenes-office2-5a| ![Alt Text](doc/office2_5a_DSAC++_pip.gif) | ![Alt Text](doc/office2_5a_KFNet_pip.gif)|
-|Description | Blue - ground truth poses   | Red - estimatd poses |
+|Description | Blue - ground truth poses   | Red - estimated poses |
 
 ### Intermediate optical flow results on [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/), [12scenes](http://graphics.stanford.edu/projects/reloc/), [Cambridge](http://mi.eng.cam.ac.uk/projects/relocalisation/) and [DeepLoc](http://deeploc.cs.uni-freiburg.de/)
 
-As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet) delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grouptruth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
+As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet) delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grourd truth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
 
 |Dataset | Description | Optical flow |
 |:--:|:--:|:--:|
@@ -61,7 +61,7 @@ As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet)
 	|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 
 * **Output:** The testing program (to be introduced below) outputs a 3-d scene coordinate map (in meters) and a 1-d confidence map into a 4-channel numpy matrix for each input image. And then you can run your own PnP algorithms to compute the camera poses from them.
-	* The confidences are the inverse of predicted Gaussain variances / uncertainties. Thus, the larger the confidences, the smaller the variances are. 
+	* The confidences are the inverse of predicted Gaussian variances / uncertainties. Thus, the larger the confidences, the smaller the variances are. 
 	* You can visualize a scene coordinate map as a point cloud via [Open3d](http://www.open3d.org/docs/release/getting_started.html) by running ```python vis/vis_scene_coordinate_map.py <path_to_npy_file>```.
 	* Or you can visualize a streaming scene coordinate map list by running ```python vis/vis_scene_coordinate_map_list.py <path_to_npy_list>```.
 
@@ -74,7 +74,7 @@ As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet)
 	* corresponding versions of CUDA and CUDNN to enable tensorflow-gpu (see [link](https://stackoverflow.com/questions/50622525/which-tensorflow-and-cuda-version-combinations-are-compatible) for reference of the version combinations), 
 	* other python packages including numpy, matplotlib and open3d.
 
-* To direcly install tensorflow and other python packages, run
+* To directly install tensorflow and other python packages, run
 ```
 sudo pip install -r requirements.txt
 ``` 
