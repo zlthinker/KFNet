@@ -12,6 +12,7 @@ If you find this project useful, please cite:
   year={2020}
 }
 ```
+## Contents 
 
 - [About](#about)
 - [File format](#file-format)
