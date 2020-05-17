@@ -13,6 +13,13 @@ If you find this project useful, please cite:
 }
 ```
 
+- [About](#about)
+- [File format](#file-format)
+- [Environment](#environment)
+- [Testing](#testing)
+- [Training](#training)
+- [Credit](#credit)
+
 
 ## About
 
@@ -33,11 +40,21 @@ KFNet simultaneously predicts the mapping points and camera poses in a temporal 
 |12scenes-office2-5a| ![Alt Text](doc/office2_5a_DSAC++_pip.gif) | ![Alt Text](doc/office2_5a_KFNet_pip.gif)|
 |Description | Blue - ground truth poses   | Red - estimated poses |
 
+### Intermediate uncertainty predictions
+
+Below we visualize the measurement and process noise.
+
+|Data | Measurement noise | Process noise |
+|:--:|:--:|:--:|
+|7scenes-fire       | ![Alt Text](doc/fire_mea_uncertainty.gif)       | ![Alt Text](doc/fire-process_uncertainty.gif)      |
+|12scenes-office2-5a| ![Alt Text](doc/office2_5a_uncertainty.gif) | ![Alt Text](doc/office2_5a_process_uncertainty.gif)|
+|Description | The brighter color means smaller noise.   | The figure bar measures the inverse of the covariances (in centimeters) |
+
 ### Intermediate optical flow results on [7scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/), [12scenes](http://graphics.stanford.edu/projects/reloc/), [Cambridge](http://mi.eng.cam.ac.uk/projects/relocalisation/) and [DeepLoc](http://deeploc.cs.uni-freiburg.de/)
 
 As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet) delineates pixel transitions across frames through optical flow reasoning **yet without recourse to grourd truth optical flow labelling**. We visualize the predicted optical flow fields below while suppressing the predictions with too large uncertainties.
 
-|Dataset | Description | Optical flow |
+|Data | Description | Optical flow |
 |:--:|:--:|:--:|
 |7scenes-fire | Indoor; hand-held; small shaky motions | <img src="doc/fire_flow.gif" width="375"> | 
 |12scenes-office2-5a | Indoor; hand-held; larger movements | <img src="doc/office2_5a_flow.gif" width="375"> |
