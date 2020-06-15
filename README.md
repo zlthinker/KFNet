@@ -78,7 +78,7 @@ As an essential component of KFNet, the process system of KFNet (i.e., OFlowNet)
 	|[chess(13G)](https://drive.google.com/open?id=15LCNv8cZkg1tINggssB--MWDGxE3LoYq) |[fire(9G)](https://drive.google.com/open?id=1EaVPg_-6gp_7PWvsiHk05QHU425t5dql) |[heads(4G)](https://drive.google.com/open?id=1aYJPdekYuofNcqdsLNdphzCVVX93zT1w) |[office(22G)](https://drive.google.com/open?id=16hMHwI8dnWEmt0HoevfQxNsnyO7ND6Nb) |[pumpkin(13G)](https://drive.google.com/open?id=1elobB_maZ5tW1v_K3Anl9BGGlnkCKI8e) |[redkitchen(27G)](https://drive.google.com/open?id=1j5UG23me1Z8Sz9PBCeTNeZsw3mSeUTtS) |[stairs(7G)](https://drive.google.com/open?id=1Hv9bOsf68xNyaOJqpnOKHKcv9YYXroLj) |
 	|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 
-* **Output:** The testing program (to be introduced below) outputs a 3-d scene coordinate map (in meters) and a 1-d confidence map into a 4-channel numpy matrix for each input image. And then you can run your own PnP algorithms to compute the camera poses from them.
+* **Output:** The testing program (to be introduced below) outputs a 3-d scene coordinate map (in meters) and a 1-d confidence map into a 4-channel numpy matrix for each input image. And then you can run the provided PnP program (in ```PnP.zip```) or your own algorithms to compute the camera poses from them.
 	* The confidences are the inverse of predicted Gaussian variances / uncertainties. Thus, the larger the confidences, the smaller the variances are. 
 	* You can visualize a scene coordinate map as a point cloud via [Open3d](http://www.open3d.org/docs/release/getting_started.html) by running ```python vis/vis_scene_coordinate_map.py <path_to_npy_file>```.
 	* Or you can visualize a streaming scene coordinate map list by running ```python vis/vis_scene_coordinate_map_list.py <path_to_npy_list>```.
@@ -127,6 +127,13 @@ The testing program of OFlowNet will save the 2-d optical flows and 1-d uncertai
 ```
 git checkout master
 python KFNet/eval.py --input_folder <input_folder> --output_folder <output_folder> --model_folder <model_folder> --scene <scene>
+```
+
+* Run PnP to compute camera poses
+
+```
+unzip PnP.zip && cd PnP
+python main.py <path_to_output_file_list> <output_folder> --gt <path_to_ground_truth_pose_list> --thread_num <32>
 ```
 
 ### Training
