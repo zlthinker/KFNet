@@ -134,6 +134,7 @@ python KFNet/eval.py --input_folder <input_folder> --output_folder <output_folde
 ```
 unzip PnP.zip && cd PnP
 python main.py <path_to_output_file_list> <output_folder> --gt <path_to_ground_truth_pose_list> --thread_num <32>
+// Please note that you need to install git-lfs before cloning to get PnP.zip, since the zip file is stored via LFS.
 ```
 
 ### Training
